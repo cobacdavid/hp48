@@ -1,0 +1,7 @@
+@ x : liste valeurs
+@ n liste effectifs
+\<< \-> x n
+  \<< x n DUP \GSLIST /
+  * \GSLIST
+  \>>
+\>>

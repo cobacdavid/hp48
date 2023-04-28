@@ -1,0 +1,21 @@
+@ avril 2023
+@ mode numworks
+\<< ERASE
+@ bandeau
+{#0d #0d} {#130d #8d} RECTFI
+@ textes
+PICT {#2d #2d} "rad" 1 \->GROB GXOR
+"PYTHON" {#65d #5d} TEXTE
+@ batterie
+{#128d #4d} {#128d #4d} RECTFI
+{#127d #2d} {#127d #6d} RECTFI
+{#121d #2d} {#125d #6d} RECTFI
+{#119d #2d} {#119d #6d} RECTFI
+@ degrade
+DEG2
+@ texte
+"NUMWORKS HP-48" {#65d #37d} TEXTE
+@ selection
+{#22d #32d} {#70d #40d} RECTFI
+\>>
+

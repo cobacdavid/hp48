@@ -1,0 +1,12 @@
+@ dessine un tapis de sierpinski
+\<< ERASE
+    0 130 FOR C
+    0 63 FOR L
+      IF C L TAPIS THEN
+      {} C R\->B + L R\->B + PIXON
+      END
+    NEXT
+    NEXT
+    {} PVIEW
+\>>
+

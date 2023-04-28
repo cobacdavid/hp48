@@ -1,0 +1,9 @@
+@ partie decimale vers binaire 
+@ flottant dans [0,1[
+@ et nb d'interations
+\<< {} SWAP 1 SWAP START
+  SWAP 2 * DUP IP
+  ROT SWAP + SWAP FP
+  SWAP
+  NEXT SWAP DROP
+\>>  

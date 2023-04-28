@@ -1,0 +1,10 @@
+%%HP: T(3)A(D)F(.);
+@ david cobac (david cobac at gmail dot com)
+@ mars 2023
+\<< \-> L
+    0 9 FOR I
+    0
+    NEXT
+    \->LIST
+    \-> z
+\>>

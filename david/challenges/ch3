@@ -1,0 +1,11 @@
+@ CH3
+@ mars 2023
+\<< \-> n
+\<< n NLST
+1 n 1 - FOR I
+RAND n I - 1 + * I + IP \-> r
+\<< I r EIJ \>>
+NEXT
+VNUM
+\>>
+\>>

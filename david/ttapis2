@@ -1,0 +1,18 @@
+@ tapis TRUTH
+\<<
+ERASE
+\<< {} X + Y +
+    WHILE DUP \PILIST
+      SWAP DUP 3 MOD \PILIST 1 == NOT ROT
+      AND
+    REPEAT
+        DUP 3 / IP
+    END
+    \PILIST NOT
+\>>
+'EQ' STO
+{(0 0) (130 63) 'X' 0 (0 0) TRUTH 'Y'}
+'PPAR' STO
+DRAW {} PVIEW
+\>>
+

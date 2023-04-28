@@ -1,0 +1,15 @@
+@ VNUM
+@ mars 2023
+@ liste vers nombre
+\<< DUP SIZE \-> s
+\<< 1 1 s FOR I
+GETI 10 s I - ^ *
+SWAP 1 - DUP
+@ retour a zero sur
+@ le dernier indice
+IF 0 == THEN s + END
+SWAP PUTI
+NEXT
+DROP \GSLIST
+\>>
+\>>

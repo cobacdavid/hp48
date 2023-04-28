@@ -1,0 +1,20 @@
+@ mars 2023
+@ dessine un texte sur PICT
+@ centre sur {#a #b}
+\<<
+\-> t c
+\<<
+  PICT
+  t 2 \->GROB
+  DUP SIZE
+  c OBJ\-> DROP
+    ROT
+    2 / -
+    3 ROLLD SWAP
+    2 / -
+    SWAP
+  2 \->LIST
+  SWAP
+  GXOR  
+  \>>
+\>>

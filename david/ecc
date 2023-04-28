@@ -1,0 +1,10 @@
+@ une liste L
+@ transformée en ECC
+\<< \-> L
+  \<< {} L 1 GET +
+    L SIZE 2 SWAP FOR I
+      L I GET SWAP DUP DUP
+      SIZE GET ROT + +
+    NEXT
+  \>>
+\>>

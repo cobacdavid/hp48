@@ -1,0 +1,13 @@
+@ tapis x y -> 0|1
+\<< \-> x y
+  \<< x y
+      WHILE DUP2 0 > SWAP 0 >  AND
+        3 PICK 3 MOD 1 == 3 PICK 3 MOD 1 == AND NOT
+        AND
+      REPEAT
+        3 / IP SWAP 3 / IP SWAP
+      END
+      0 == SWAP 0 == OR
+  \>>
+\>>
+

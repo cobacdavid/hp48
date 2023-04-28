@@ -1,0 +1,21 @@
+@ mars 2023
+@ dessine un degrade 0-1-0
+\<<
+9 63 FOR L
+0 130 FOR C
+  IF L 40 < THEN
+    IF RAND L 9 - 18 / <
+    THEN {} C R\->B + L R\->B + PIXON
+    END
+  ELSE
+    IF L 44 < 
+    THEN {} C R\->B + L R\->B + PIXON
+    ELSE
+    IF RAND L 44 - 20 / >
+    THEN {} C R\->B + L R\->B + PIXON
+    END
+    END
+  END
+NEXT
+NEXT
+\>>

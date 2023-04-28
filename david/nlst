@@ -1,0 +1,8 @@
+@ NLST
+@ mars 2023
+@ nombre vers liste 1 2 3 4 ... n
+\<< \-> n
+\<< {} 1 n FOR I
+I + NEXT
+\>>
+\>>

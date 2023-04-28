@@ -1,0 +1,19 @@
+@ tapis TRUTH
+\<<
+ERASE
+\<< X 'U' STO Y 'V' STO
+    WHILE U V AND
+      U 3 MOD 1 == V 3 MOD 1 == AND NOT
+      AND
+    REPEAT
+      U 3 / IP 'U' STO
+      V 3 / IP 'V' STO
+    END
+    U V * NOT
+\>>
+'EQ' STO
+{(0 0) (130 63) 'X' 0 (0 0) TRUTH 'Y'}
+'PPAR' STO
+DRAW {} PVIEW
+\>>
+

@@ -1,0 +1,11 @@
+@ mars 2023
+@ nombre vers liste
+\<< \-> n
+\<< {} n
+WHILE DUP 0 > REPEAT
+DUP 10 / IP SWAP 10 MOD
+ROT SWAP + SWAP
+END
+DROP REVLIST
+\>>
+

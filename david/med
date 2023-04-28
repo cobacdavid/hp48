@@ -1,0 +1,19 @@
+@ x : liste variables
+@ n: liste effectifs
+\<< \-> x n
+  \<< x n {} 1 x SIZE FOR I
+    2 PICK I GET 1 SWAP FOR J
+      3 PICK I GET +
+    NEXT
+  NEXT
+  SORT \-> L
+    \<< IF L SIZE 2 MOD 0 == THEN
+        L DUP SIZE 2 /
+        DUP 1 + 3 ROLLD GET
+        L ROT GET + 2 /
+      ELSE
+        L DUP SIZE 2 / IP 1 + GET
+      END
+    \>>
+  \>>
+\>>

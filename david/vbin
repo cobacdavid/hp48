@@ -1,0 +1,8 @@
+@ entier (base 10) vers liste (binaire)
+\<< {} SWAP
+  WHILE DUP 1 > REPEAT
+    DUP 2 MOD ROT SWAP +
+    SWAP 2 / IP
+  END
+  + REVLIST
+\>>

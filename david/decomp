@@ -1,0 +1,13 @@
+@ decomposition d'un entier
+\<< {} SWAP 2
+  WHILE DUP2 \>= REPEAT
+    IF DUP2 MOD 0 == THEN
+      DUP 4 ROLL SWAP +
+      3 ROLLD DUP ROT SWAP
+      / SWAP
+    ELSE
+      1 +
+    END
+  END
+  DROP2
+\>>

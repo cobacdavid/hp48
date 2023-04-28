@@ -1,0 +1,15 @@
+@ mars 2023
+@ n rectangles avec NOT (semble XOR)
+\<< \-> n
+\<<
+ERASE
+1 n START
+  1 2 START
+  RAND 131 * IP
+  RAND 64 * IP
+  2 \->LIST R\->B 
+  NEXT
+  RECTFI
+NEXT
+\>>
+\>>

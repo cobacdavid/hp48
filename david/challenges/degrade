@@ -1,0 +1,18 @@
+@ mars 2023
+@ dessine un degrade 0-1-0
+\<<
+ERASE
+0 63 FOR L
+0 130 FOR C
+  IF L 32 < THEN
+    IF RAND L 20 / <
+    THEN {} C R\->B + L R\->B + PIXON
+    END
+  ELSE
+    IF RAND L 32 20 / >
+    THEN {} C R\->B + L R\->B + PIXON
+    END
+  END
+NEXT
+NEXT
+\>>

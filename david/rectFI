@@ -1,0 +1,18 @@
+@ mars 2023
+@ {#x1 #y1} {#x2 #y2}
+@ remplit un rectangle
+\<< B\->R SWAP B\->R
+OBJ\-> DROP ROT OBJ\-> DROP ROT
+4 DUPN
+MAX 7 ROLLD
+MAX 6 ROLLD
+MIN 5 ROLLD
+MIN 4 ROLLD
+\-> x y z t
+  \<< y t FOR L
+  {} x + L + R\->B
+  {} z + L + R\->B
+  TLINE
+  NEXT
+  \>>
+\>>

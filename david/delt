@@ -1,0 +1,10 @@
+@ mars 2023
+@ supprime un element dans une liste
+@ a l'indice
+\<< \-> n
+\<<
+1
+\<< IF DUP n == THEN DROP END \>>
+DOLIST
+\>>
+\>>

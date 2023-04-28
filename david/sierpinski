@@ -1,0 +1,12 @@
+@ 3 couples et 1 nombre d'iterations
+\<< \-> A B C n
+  \<< ERASE A {} A + B + C +
+    1 n START
+      DUP RAND 3 * 1 + IP GET
+      ROT MIL
+      DUP OBJ\-> 2 \->LIST IP R\->B PIXON
+      SWAP
+    NEXT
+  \>>
+  {} PVIEW
+\>>

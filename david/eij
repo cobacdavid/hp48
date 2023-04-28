@@ -1,0 +1,7 @@
+@ mars 2023
+@ david cobac
+\<< \-> L i j
+\<< L i GET L j GET \-> ei ej
+\<< L j ei PUT i ej PUT \>>
+\>> 
+\>>
