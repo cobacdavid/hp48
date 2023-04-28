@@ -1,0 +1,10 @@
+#!/usr/bin/kermit +
+set line /dev/pts/1
+set speed 9600
+set carrier-watch off
+set modem type direct
+set flow none 
+set parity none
+set block 1
+set control prefix all
+robust
