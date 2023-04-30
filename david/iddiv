@@ -1,0 +1,2 @@
+@iddiv k {a b} -> {a b*k}
+\<< 1 ROT 2 \->LIST DMUL \>>

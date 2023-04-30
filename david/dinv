@@ -1,0 +1,2 @@
+@dinv {a b} -> {b a}
+\<< REVLIST \>>

@@ -1,0 +1,7 @@
+@ euclide a b -> pgcd
+\<< DUP2 < \<< SWAP \>> IFT
+  WHILE DUP 0 > REPEAT
+    SWAP OVER MOD
+  END
+  DROP
+\>>

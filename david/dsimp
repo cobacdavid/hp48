@@ -1,0 +1,2 @@
+@ dsimp {a,b} -> {a/pgcd,b/pgcd}
+\<< DUP ABS OBJ\-> DROP EUCLIDE / DSGN \>>

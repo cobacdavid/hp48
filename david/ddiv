@@ -1,0 +1,2 @@
+@ ddiv {a b} {c d} -> {a*d/pgcd, b*c/pgcd}
+\<< REVLIST DMUL \>>

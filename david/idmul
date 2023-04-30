@@ -1,0 +1,2 @@
+@ idmul k {a,b} -> {k*a,b}
+\<< SWAP 1 2 \->LIST * DSIMP \>>

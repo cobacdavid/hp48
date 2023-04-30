@@ -1,0 +1,9 @@
+@ dadd {a,b} {c,d} -> {(ad+bc)/pgcd,bd/pgcd}
+\<<
+  DUP2
+  REVLIST * \GSLIST
+  3 ROLLD
+  * 2 GET
+  2 \->LIST
+  DSIMP
+\>>

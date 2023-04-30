@@ -1,0 +1,2 @@
+@ {a,-b} -> {-a,b} et {-a,-b} -> {a,b}
+\<< DUP IF 2 GET 0 < THEN NEG END \>>
