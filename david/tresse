@@ -1,0 +1,9 @@
+\<< {} SWAP
+    WHILE DUP2 INLST NOT REPEAT
+         DUP 3 ROLLD + SWAP
+         VLST DUP \GSLIST - NEG
+         1 'RED' DOLIST
+         VNUM
+    END
+    DROP
+\>>

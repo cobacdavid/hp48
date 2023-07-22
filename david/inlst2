@@ -1,0 +1,5 @@
+@ lst elt -> 0 ou 1
+\<< SWAP DUP SIZE 3 ROLLD SWAP ROT
+    IF 0 == THEN 0 ELSE DUP2 - 1 + \PILIST 0 == END
+\>>
+

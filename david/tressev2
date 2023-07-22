@@ -1,0 +1,10 @@
+@ renvoie la tresse d'un nombre
+\<< {} SWAP VLST
+    WHILE DUP2 INLST NOT REPEAT
+         DUP 3 ROLLD 1 \->LIST + SWAP
+         DUP \GSLIST - NEG
+         1 'RED' DOLIST
+    END
+    DROP
+    1 'VNUM' DOLIST
+\>>
