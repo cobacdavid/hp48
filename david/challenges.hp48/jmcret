@@ -1,0 +1,14 @@
+\<< DUP 1 \-> d0 d j
+\<< -42 SF {7 31} 0 CON
+    1 217 START
+       WHILE
+          DUP { j d } GET
+       REPEAT
+          j 7 MOD 1 + 'j' STO
+          d 1  DATE+  'd' STO
+       END
+       { j d } 1 PUT
+    NEXT DROP
+    d0 DUP d DDAYS d 3 \->LIST
+    \>>
+\>>

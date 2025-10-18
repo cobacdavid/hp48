@@ -1,0 +1,11 @@
+\<<
+  { 1 }
+  1 \-> i \<<
+    3 4 FOR j
+      j 'i' STO+ @ calculer la nouvelle valeur
+      i + @ pousser cette valeur dans la liste
+    NEXT
+  \>> @ à ce stade avez-vous trouvé la séquence formée ?
+  5 * \GSLIST @ enfin la formule
+  "Bienvenue en" \->TAG
+\>>

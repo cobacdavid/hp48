@@ -1,0 +1,9 @@
+@ lstdeb prg
+\<< DEPTH 2 - \-> l p d @ ... e5 e4 lstdeb prg dpth
+    \<< 1 l SIZE FOR I
+	    l I GET p EVAL
+        NEXT
+    DEPTH d - \->LIST
+    \>>
+    @ ... e5 e4 lstfin
+\>>

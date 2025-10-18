@@ -1,0 +1,6 @@
+@ test si liste est d'éléments identiques
+@ {a b c} -> 0|1
+\<<
+   OBJ\-> 1 2 \->LIST \->ARRY
+   '\GSDAT' STO SDEV 0 ==
+\>>    

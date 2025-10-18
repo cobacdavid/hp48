@@ -1,0 +1,11 @@
+\<< -42 SF
+    DUP {}
+    WHILE DUP SIZE 217 \=/ REPEAT
+    OVER 0 TSTR 1 6 SUB DUP2
+    POS IF THEN DROP ELSE + END
+    SWAP 1 DATE+ SWAP
+    END
+    DROP DUP2 DDAYS 1 -
+    -42 CF
+\>>
+
