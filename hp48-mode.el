@@ -55,20 +55,20 @@
    (cons hp48-re-w 'font-lock-keyword-face)
    (cons hp48-re-mw 'font-lock-function-name-face)
    (cons hp48-re-sw 'font-lock-builtin-face)
-   (cons "\\\<<\\|\\>>" 'font-lock-keyword-face)
-   (cons "{.*}" 'font-lock-constant-face)
-   (cons "[.*]" 'font-lock-constant-face)
-   (cons "'.*'" 'font-lock-constant-face)
+   (cons "\\\\<<\\|\\\\>>" 'font-lock-keyword-face)
+   (cons "{.*?}" 'font-lock-constant-face)
+   (cons "\\[.*?\\]" 'font-lock-constant-face)
+   (cons "'.*?'" 'font-lock-constant-face)
    (cons "@.*" 'font-lock-comment-face)
    )
   )
 
 ;; lien vers x48
-(defvar hp48-x48-execpath  "/usr/local/bin/x48")
+(defvar hp48-x48-execpath  "/usr/bin/x48")
 
 (defun hp48-x48 ()
   (interactive)
-  (start-process "x48" nil hp48-x48-execpath) 
+  (start-process "x48" "*x48*" hp48-x48-execpath) 
   )
 
 ;; communication kermit
@@ -131,7 +131,7 @@ robust
 		    st
 		    )
   (setq-local comment-start "@")
-  (setq-local comment-start-skip "")
+  (setq-local comment-start-skip "@+\\s-*")
   (setq-local tab-width 2)
   (setq-local font-lock-defaults '(hp48-keywords))
   )
