@@ -3,6 +3,7 @@
  
 ;; https://www.youtube.com/watch?v=ANQNLuKodHA&t=71s
 
+;; "\\->" est à part car si dans convwords, il ne se highlighte pas seul
 ;; hp48 words
 (defvar hp48-words
   '("AND" "ARC"
@@ -16,7 +17,7 @@
     "LIST"
     "NEXT" "NOT"
     "OR"
-    "PICT" "POS" "PUT" "PVIEW"
+    "PICT" "PIXON" "POS" "PUT" "PVIEW"
     "RCL" "RECT" "REPEAT" "REVLIST"
     "SEQ" "SF" "START" "STO"
     "THEN" "TLINE"
@@ -47,7 +48,7 @@
     "LOG"
     "MAX" "MIN" "MOD"
     "\\PILIST"
-    "RE"
+    "RAND" "RE"
     "SIGN" "SIN" "SQ"
     "\\v/"
     ))
@@ -77,6 +78,147 @@
    )
   )
 
+(defun hp48-completion-at-point ()
+  (let ((bounds (bounds-of-thing-at-point 'word)))
+    (when bounds
+      (list (car bounds)
+            (cdr bounds)
+            (append hp48-words
+                    hp48-mathwords
+                    hp48-stackwords
+                    hp48-convwords)))))
+
+
+;; indentation par IA Claude (sonnet 4.6)
+(defun hp48-indent-line ()
+  (interactive)
+  (let ((indent 0))
+    (save-excursion
+      (beginning-of-line)
+      (let ((pos (point)))
+        (goto-char (point-min))
+        (while (< (point) pos)
+          (cond
+           ((looking-at "\\\\<<")
+            (setq indent (+ indent 4))
+            (forward-char 3))
+           ((looking-at "\\\\>>")
+            (setq indent (max 0 (- indent 4)))
+            (forward-char 3))
+           ((looking-at (regexp-opt '("FOR" "START" "WHILE" "DO" "DOLIST") 'words))
+            (setq indent (+ indent 2))
+            (forward-word))
+           ((looking-at (regexp-opt '("NEXT" "UNTIL" "END") 'words))
+            (setq indent (max 0 (- indent 2)))
+            (forward-word))
+           (t (forward-char 1))))))
+    (indent-line-to indent)))
+
+
+;; insertion de commentaires pour état de la pile à chaque ligne
+;; on evite les lignes déjà commentées
+;; on ne les prend d'ailleurs pas en compte pour le calcul de le position
+(defun hp48-add-stack-comments ()
+  (interactive)
+  (let* ((max-col (save-excursion
+                    (goto-char (point-min))
+                    (let ((m 0))
+                      (while (not (eobp))
+                        (beginning-of-line)
+                        (unless (looking-at "\\s-*@")
+                          (end-of-line)
+                          (setq m (max m (current-column))))
+                        (forward-line 1))
+                      m)))
+         (target-col (+ max-col 2)))
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (beginning-of-line)
+        (unless (looking-at "\\s-*@")
+          (end-of-line)
+          (unless (looking-back "@[^@]*" (line-beginning-position))
+            (let ((pad (- target-col (current-column))))
+              (insert (make-string (max pad 1) ?\s))
+              (insert "@ "))))
+        (forward-line 1)))))
+
+;; conversion unicode vers ascii
+(defvar hp48-unicode-to-tio
+  '(("\\\\" . "\\\\")       ; backslash en premier
+    ("∠"  . "\\<)")
+    ("x̄"  . "\\x-")
+    ("∇"  . "\\.V")
+    ("√"  . "\\v/")
+    ("∫"  . "\\.S")
+    ("Σ"  . "\\GS")
+    ("▶"  . "\\|>")
+    ("π"  . "\\pi")
+    ("∂"  . "\\.d")
+    ("≤"  . "\\<=")
+    ("≥"  . "\\>=")
+    ("≠"  . "\\=")
+    ("α"  . "\\Ga")
+    ("→"  . "\\->")
+    ("←"  . "\\<-")
+    ("↓"  . "\\|v")
+    ("↑"  . "\\|^")
+    ("γ"  . "\\Gg")
+    ("δ"  . "\\Gd")
+    ("ε"  . "\\Ge")
+    ("η"  . "\\Gn")
+    ("θ"  . "\\Gh")
+    ("λ"  . "\\Gl")
+    ("ρ"  . "\\Gr")
+    ("σ"  . "\\Gs")
+    ("τ"  . "\\Gt")
+    ("ω"  . "\\Gw")
+    ("Δ"  . "\\GD")
+    ("Π"  . "\\PI")
+    ("Ω"  . "\\GW")
+    ("∞"  . "\\oo")
+    ("«"  . "\\<<")
+    ("°"  . "\\^o")
+    ("µ"  . "\\Gm")
+    ("»"  . "\\>>")
+    ("×"  . "\\.x")
+    ("Φ"  . "\\O/")
+    ("÷"  . "\\:-")
+    ))
+
+(defun hp48-ascii-to-unicode ()
+  (interactive)
+  (let ((case-fold-search nil))
+    (save-excursion
+      (dolist (pair (reverse hp48-unicode-to-tio))
+        (goto-char (point-min))
+        (while (search-forward (cdr pair) nil t)
+          (replace-match (car pair) t t))))))
+
+(defun hp48-unicode-to-ascii ()
+  (interactive)
+  (let ((case-fold-search nil))
+    (save-excursion
+      (dolist (pair hp48-unicode-to-tio)
+        (goto-char (point-min))
+        (while (search-forward (car pair) nil t)
+          (replace-match (cdr pair) t t))))))
+
+(defvar-local hp48--unicode-mode nil)
+
+(defun hp48-toggle-unicode ()
+  (interactive)
+  (if hp48--unicode-mode
+      (progn
+        (hp48-unicode-to-ascii)
+        (setq hp48--unicode-mode nil)
+        (message "Mode ASCII (trigraphes)"))
+    (progn
+        (hp48-ascii-to-unicode)
+        (setq hp48--unicode-mode t)
+        (message "Mode Unicode"))))
+
+;;
 ;; lien vers x48
 (defvar hp48-x48-execpath  "/usr/bin/x48")
 
@@ -110,13 +252,23 @@ robust
   (let ((cmd "kermit"))
     (concat cmd " " "%s" " -s %s")))
 
-(defvar hp48-default-port-node "/dev/ttyUSB0")
+;; port par défaut
+;; dernier choix reproposé auto.
+(defcustom hp48-default-port-node "/dev/ttyUSB0"
+  "Port série par défaut pour la HP48."
+  :type 'string
+  :group 'hp48)
+
+(defvar hp48--last-port hp48-default-port-node)
 
 (defun hp48-send (port)
   (interactive
-   ;; (list (read-directory-name "Port :" hp48-default-port-node)))
-   "sPort: ")
+   (list (completing-read "Port: "
+                          '("/dev/ttyUSB0" "/dev/pts/2")
+                          nil nil nil nil
+                          hp48--last-port)))
   (message "Choix de %s" port)
+  (setq hp48--last-port port)
   (save-buffer)
   (let* ((bfn buffer-file-name)
 	 (nfn (file-name-base bfn))
@@ -124,14 +276,18 @@ robust
     (hp48-kermit-conf port)
     (copy-file bfn nf)
     (shell-command
-     (format hp48--send-command hp48-kermit-configfile nf))
+     (format hp48--send-command hp48-kermit-configfile nf)
+     ;; messages kermit dans un buffer dédié
+     "*hp48-kermit*")
     (delete-file hp48-kermit-configfile)
     (delete-file nf)
     )
   )
 
-;;
+;; les raccourcis clavier
 (defvar-keymap hp48-mode-map
+  "C-c C-c" #'hp48-add-stack-comments
+  "C-c C-u" #'hp48-toggle-unicode
   "C-c C-s" #'hp48-send
   "C-c C-x" #'hp48-x48)
 
@@ -148,6 +304,8 @@ robust
   (setq-local comment-start-skip "@+\\s-*")
   (setq-local tab-width 2)
   (setq-local font-lock-defaults '(hp48-keywords))
+  (setq-local indent-line-function #'hp48-indent-line)
+  (add-hook 'completion-at-point-functions #'hp48-completion-at-point nil t)
   )
 ;;(define-key hp48-mode-map "\C-c\C-s" 'hp48-send)
 ;;(define-key hp48-mode-map "\C-c\C-x" 'hp48-x48)
