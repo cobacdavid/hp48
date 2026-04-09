@@ -7,17 +7,17 @@
 (defvar hp48-words
   '("AND" "ARC"
     "BEEP"
-    "CASE" "CF" "CYLIN"
-    "DO" "DOLIST"
+    "CASE" "CF" "CLLCD" "CYLIN"
+    "DISP" "DO" "DOLIST"
     "ELSE" "END" "ERASE"
     "FC\?C" "FOR" "FS"
-    "GET"
+    "GET" "GOR" "GROB"
     "IF" "IFT" "IFTE"
     "LIST"
     "NEXT" "NOT"
-    "OBJ\\->" "OR"
+    "OR"
     "PICT" "POS" "PUT" "PVIEW"
-    "RCL" "RECT" "REPEAT"
+    "RCL" "RECT" "REPEAT" "REVLIST"
     "SEQ" "SF" "START" "STO"
     "THEN" "TLINE"
     "UNTIL"
@@ -26,20 +26,31 @@
     "YRNG"
     ))
 
+(defvar hp48-convwords
+  '("ARRY\\->" "\\->ARRY"
+    "B\\->R"
+    "C\\->PX" "C\\->R"
+    "\\->LIST"
+    "NUM\\->" "\\->NUM"
+    "OBJ\\->"
+    "R\\->B" "R\\->C"
+    "STR\\->" "\\->STR"
+    "TAG\\->" "\\->TAG"
+    ))
 
 (defvar hp48-mathwords
   '("ABS" "ALOG" "ASIN"
-    "B\\->R"
     "COS"
     "FP"
     "\\GSLIST"
-    "IP"
+    "IP" "IM"
     "LOG"
     "MAX" "MIN" "MOD"
     "\\PILIST"
-    "SIN" "SQ"
+    "RE"
+    "SIGN" "SIN" "SQ"
     "\\v/"
-    "\\->"))
+    ))
 
 (defvar hp48-stackwords
   '("DEPTH" "DROP2" "DROP" "DROPN" "DUP" "DUP2" "DUPN"
@@ -49,10 +60,12 @@
     "SIZE" "SWAP"))
 
 (defvar hp48-re-w (regexp-opt hp48-words 'words))
+(defvar hp48-re-cv (regexp-opt hp48-convwords 'words))
 (defvar hp48-re-mw (regexp-opt hp48-mathwords 'words))
 (defvar hp48-re-sw (regexp-opt hp48-stackwords 'words))
 (defvar hp48-keywords (list
    (cons hp48-re-w 'font-lock-keyword-face)
+   (cons hp48-re-cv 'font-lock-type-face)
    (cons hp48-re-mw 'font-lock-function-name-face)
    (cons hp48-re-sw 'font-lock-builtin-face)
    (cons "\\\\<<\\|\\\\>>" 'font-lock-keyword-face)
@@ -60,6 +73,7 @@
    (cons "\\[.*?\\]" 'font-lock-constant-face)
    (cons "'.*?'" 'font-lock-constant-face)
    (cons "@.*" 'font-lock-comment-face)
+   (cons "\\\\->" 'font-lock-type-face)
    )
   )
 
