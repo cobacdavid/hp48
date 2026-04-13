@@ -6,20 +6,20 @@
 ;; "\\->" est à part car si dans convwords, il ne se highlighte pas seul
 ;; hp48 words
 (defvar hp48-words
-  '("AND" "ARC"
-    "BEEP"
-    "CASE" "CF" "CLLCD" "CYLIN"
-    "DISP" "DO" "DOLIST"
-    "ELSE" "END" "ERASE"
-    "FC\?C" "FOR" "FS"
-    "GET" "GOR" "GROB"
+  '("ADD" "AND" "APPLY" "ARC"
+    "BAR" "BEEP" "BLANK" "BOX"
+    "CASE" "CF" "CHOOSE" "CHR" "CLLCD" "CYLIN"
+    "DATE" "DISP" "DO" "DOERR" "DOLIST" "DOSUBS"
+    "ELSE" "END" "ENDSUB" "ERASE" "EVAL"
+    "FC\?" "FC\?C" "FOR" "FS\?" "FS\?C"
+    "GET" "GETI" "GOR" "GROB"
     "IF" "IFT" "IFTE"
-    "LIST"
+    "LAST" "LASTARG" "LIST"
     "NEXT" "NOT"
     "OR"
     "PICT" "PIXON" "POS" "PUT" "PVIEW"
-    "RCL" "RECT" "REPEAT" "REVLIST"
-    "SEQ" "SF" "START" "STO"
+    "RCL" "RCWS" "RECT" "REPEAT" "REVLIST"
+    "SEQ" "SF" "START" "STO" "STREAM" "STWS"
     "THEN" "TLINE"
     "UNTIL"
     "WHILE"
@@ -31,6 +31,9 @@
   '("ARRY\\->" "\\->ARRY"
     "B\\->R"
     "C\\->PX" "C\\->R"
+    "COL\\->" "\\->COL"
+    "D\\->R"
+    "\\->DATE" 
     "\\->LIST"
     "NUM\\->" "\\->NUM"
     "OBJ\\->"
@@ -40,15 +43,17 @@
     ))
 
 (defvar hp48-mathwords
-  '("ABS" "ALOG" "ASIN"
-    "COS"
-    "FP"
-    "\\GSLIST"
+  '("ABS" "ALOG" "ARG" "ASIN" "ASR" "ATAN" 
+    "CEIL" "COMB" "CONJ" "COS" "CROSS"
+    "DEG" "DOT"
+    "EXP"
+    "FLOOR" "FP"
+    "GRAD" "\\GSLIST"
     "IP" "IM"
-    "LOG"
+    "LN" "LOG"
     "MAX" "MIN" "MOD"
     "\\PILIST"
-    "RAND" "RE"
+    "RAD" "RAND" "RE"
     "SIGN" "SIN" "SQ"
     "\\v/"
     ))
@@ -89,30 +94,63 @@
                     hp48-convwords)))))
 
 
-;; indentation par IA Claude (sonnet 4.6)
+;; indentation par pile : le \>> fermant s'aligne sur le début de la ligne
+;; contenant le \<< correspondant.
 (defun hp48-indent-line ()
   (interactive)
-  (let ((indent 0))
+  (let* ((step 2)
+         (cur-line-start (save-excursion (beginning-of-line) (point)))
+         ;; prog-stack : indentations des lignes contenant chaque \<< non fermé
+         (prog-stack nil)
+         ;; loop-stack : indentations des lignes contenant FOR/START/WHILE/DO/DOLIST
+         (loop-stack nil))
+    ;; Phase 1 : parcourir depuis le début jusqu'à la ligne courante
     (save-excursion
-      (beginning-of-line)
-      (let ((pos (point)))
-        (goto-char (point-min))
-        (while (< (point) pos)
-          (cond
-           ((looking-at "\\\\<<")
-            (setq indent (+ indent 4))
-            (forward-char 3))
-           ((looking-at "\\\\>>")
-            (setq indent (max 0 (- indent 4)))
-            (forward-char 3))
-           ((looking-at (regexp-opt '("FOR" "START" "WHILE" "DO" "DOLIST") 'words))
-            (setq indent (+ indent 2))
-            (forward-word))
-           ((looking-at (regexp-opt '("NEXT" "UNTIL" "END") 'words))
-            (setq indent (max 0 (- indent 2)))
-            (forward-word))
-           (t (forward-char 1))))))
-    (indent-line-to indent)))
+      (goto-char (point-min))
+      (while (< (point) cur-line-start)
+        (cond
+         ((looking-at "\\\\<<")
+          (push (current-indentation) prog-stack)
+          (forward-char 3))
+         ((looking-at "\\\\>>")
+          (when prog-stack (pop prog-stack))
+          (forward-char 3))
+         ((looking-at (regexp-opt '("FOR" "START" "WHILE" "DO" "DOLIST") 'words))
+          (push (current-indentation) loop-stack)
+          (forward-word))
+         ((looking-at (regexp-opt '("NEXT" "END") 'words))
+          (when loop-stack (pop loop-stack))
+          (forward-word))
+	 ((looking-at (regexp-opt '("UNTIL" "REPEAT" "ELSE") 'words))
+	  ;; ferme un bloc
+	  (when loop-stack (pop loop-stack))
+	  ;; ouvre un nouveau bloc au même niveau
+	  (push (current-indentation) loop-stack)
+	  (forward-word))
+         (t (forward-char 1)))))
+    ;; Phase 2 : calculer l'indentation de la ligne courante
+    (let ((cur-indent
+           (save-excursion
+             (beginning-of-line)
+             (skip-chars-forward " \t")
+             (cond
+              ;; \>> fermant : s'aligne sur le début de la ligne du \<< correspondant
+              ((looking-at "\\\\>>")
+               (or (car prog-stack) 0))
+              ;; fermetures de boucle : s'alignent sur la ligne d'ouverture
+              ((looking-at (regexp-opt '("NEXT" "END") 'words))
+               (or (car loop-stack) 0))
+	      ((looking-at (regexp-opt '("UNTIL" "REPEAT" "ELSE") 'words))
+	       (or (car loop-stack) 0))
+              ;; contenu ordinaire : indentation de l'ouvrant le plus profond + step
+              ;; si aucun bloc ouvert : toplevel → colonne 0
+              (t
+               (if (or prog-stack loop-stack)
+                   (+ (max (or (car prog-stack) 0)
+                           (or (car loop-stack) 0))
+                      step)
+                 0))))))
+      (indent-line-to cur-indent))))
 
 
 ;; insertion de commentaires pour état de la pile à chaque ligne
@@ -219,8 +257,11 @@
         (message "Mode Unicode"))))
 
 ;;
-;; lien vers x48
-(defvar hp48-x48-execpath  "/usr/bin/x48")
+;; chemin vers x48
+(defcustom hp48-x48-execpath "/usr/bin/x48"
+  "Path to the x48 executable."
+  :type 'string
+  :group 'hp48)
 
 (defun hp48-x48 ()
   (interactive)
@@ -228,7 +269,7 @@
   )
 
 ;; communication kermit
-(defvar hp48-kermit-config
+(defcustom hp48-kermit-config
   "#!/usr/bin/kermit +
 set line %s
 set speed 9600
@@ -239,7 +280,11 @@ set parity none
 set block 1
 set control prefix all
 robust
-")
+"
+  "Template for the Kermit configuration script.
+The %s placeholder will be replaced with the device path."
+  :type 'text
+  :group 'hp48)
 
 (defvar hp48-kermit-configfile "/tmp/ConnexionHP48")
 
@@ -275,14 +320,13 @@ robust
 	 (nf (concat "/tmp/" nfn)))
     (hp48-kermit-conf port)
     (copy-file bfn nf)
-    (shell-command
-     (format hp48--send-command hp48-kermit-configfile nf)
-     ;; messages kermit dans un buffer dédié
-     "*hp48-kermit*")
-    (delete-file hp48-kermit-configfile)
-    (delete-file nf)
-    )
-  )
+    (unwind-protect
+	(shell-command
+	 (format hp48--send-command hp48-kermit-configfile nf)
+	 ;; messages kermit dans un buffer dédié
+	 "*hp48-kermit*")
+      (delete-file hp48-kermit-configfile)
+      (delete-file nf))))
 
 ;; les raccourcis clavier
 (defvar-keymap hp48-mode-map
