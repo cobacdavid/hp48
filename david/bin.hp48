@@ -1,6 +1,0 @@
-@ transforme un nombre
-@ en binaire
-\<< DUP FP SWAP IP
-VBIN "." +
-SWAP 5 VBIND +
-\>>

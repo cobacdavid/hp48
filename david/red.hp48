@@ -1,5 +1,0 @@
-@ num -> num
-\<< WHILE DUP 9 > REPEAT
-    VLST \GSLIST
-    END
-\>>

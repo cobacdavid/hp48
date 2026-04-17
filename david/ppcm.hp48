@@ -1,2 +1,0 @@
-@ ppcm a b -> ppcm(a,b)
-\<< DUP2 * 3 ROLLD EUCLIDE / \>>

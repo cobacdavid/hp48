@@ -1,2 +1,0 @@
-@ liste entier (position) -> entier
-\<< SWAP DUP \GSLIST SWAP ROT GET - \>>

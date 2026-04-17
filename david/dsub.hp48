@@ -1,2 +1,0 @@
-@ dsub {a b} {c d} -> {(ad-bc)/pgcd, b*d/pgcd}
-\<< -1 SWAP IDMUL DADD \>>

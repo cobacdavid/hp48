@@ -1,2 +1,0 @@
-@ dmul {a,b} {c,d} -> {a*b/pgcd, c*d/pgcd}
-\<< * DSIMP \>>
