@@ -1,9 +1,9 @@
 ;;; hp48-mode.el --- une tentative de mode pour éditer des programmes userRPL de HP48
-;;; Code:
- 
+;;; Author: David Cobac 
+
+;; Xah Lee "Emacs Lisp Write Python Mode" 
 ;; https://www.youtube.com/watch?v=ANQNLuKodHA&t=71s
 
-;; "\\->" est à part car si dans convwords, il ne se highlighte pas seul
 ;; hp48 words
 (defvar hp48-words
   '("ADD" "AND" "APPLY" "ARC"
@@ -70,17 +70,18 @@
 (defvar hp48-re-mw (regexp-opt hp48-mathwords 'words))
 (defvar hp48-re-sw (regexp-opt hp48-stackwords 'words))
 (defvar hp48-keywords (list
-   (cons hp48-re-w 'font-lock-keyword-face)
-   (cons hp48-re-cv 'font-lock-type-face)
-   (cons hp48-re-mw 'font-lock-function-name-face)
-   (cons hp48-re-sw 'font-lock-builtin-face)
-   (cons "\\\\<<\\|\\\\>>" 'font-lock-keyword-face)
-   (cons "{.*?}" 'font-lock-constant-face)
-   (cons "\\[.*?\\]" 'font-lock-constant-face)
-   (cons "'.*?'" 'font-lock-constant-face)
-   (cons "@.*" 'font-lock-comment-face)
-   (cons "\\\\->" 'font-lock-type-face)
-   )
+		       (cons hp48-re-w 'font-lock-keyword-face)
+		       (cons hp48-re-cv 'font-lock-type-face)
+		       (cons hp48-re-mw 'font-lock-function-name-face)
+		       (cons hp48-re-sw 'font-lock-builtin-face)
+		       (cons "\\\\<<\\|\\\\>>" 'font-lock-keyword-face)
+		       (cons "{.*?}" 'font-lock-constant-face)
+		       (cons "\\[.*?\\]" 'font-lock-constant-face)
+		       (cons "'.*?'" 'font-lock-constant-face)
+		       (cons "@.*" 'font-lock-comment-face)
+		       ;; "\\->" est à part car si dans convwords, il ne se highlighte pas seul
+		       (cons "\\\\->" 'font-lock-type-face)
+		       )
   )
 
 (defun hp48-completion-at-point ()
@@ -94,41 +95,44 @@
                     hp48-convwords)))))
 
 
-;; indentation par pile : le \>> fermant s'aligne sur le début de la ligne
-;; contenant le \<< correspondant.
+;; indentation par pile
 (defun hp48-indent-line ()
   (interactive)
-  (let* ((step 2)
-         (cur-line-start (save-excursion (beginning-of-line) (point)))
-         ;; prog-stack : indentations des lignes contenant chaque \<< non fermé
-         (prog-stack nil)
-         ;; loop-stack : indentations des lignes contenant FOR/START/WHILE/DO/DOLIST
-         (loop-stack nil))
-    ;; Phase 1 : parcourir depuis le début jusqu'à la ligne courante
+  (let ((step 2)
+        (cur-line-start (save-excursion (beginning-of-line) (point)))
+        ;; prog-stack : indentation de la ligne contenant chaque \<< non fermé
+        (prog-stack nil)
+        ;; loop-stack : indentation de la ligne contenant chaque
+        ;; ouvrant non fermé
+        (loop-stack nil))
+    ;; Phase 1 : parcourir depuis le début du buffer jusqu'au début de la
+    ;;           ligne courante afin de reconstruire l'état des piles.
     (save-excursion
       (goto-char (point-min))
       (while (< (point) cur-line-start)
         (cond
+         ;; --- programmes : \<< ouvre, \>> ferme ---
          ((looking-at "\\\\<<")
           (push (current-indentation) prog-stack)
           (forward-char 3))
          ((looking-at "\\\\>>")
           (when prog-stack (pop prog-stack))
           (forward-char 3))
-         ((looking-at (regexp-opt '("FOR" "START" "WHILE" "DO" "DOLIST") 'words))
+         ;; --- ouvrants de structure ---
+         ((looking-at (regexp-opt '("IF" "FOR" "START" "WHILE" "DO") 'words))
           (push (current-indentation) loop-stack)
           (forward-word))
-         ((looking-at (regexp-opt '("NEXT" "END") 'words))
+         ;; --- fermants : dépile ---
+         ((looking-at (regexp-opt '("NEXT" "END" "STEP") 'words))
           (when loop-stack (pop loop-stack))
           (forward-word))
-	 ((looking-at (regexp-opt '("UNTIL" "REPEAT" "ELSE") 'words))
-	  ;; ferme un bloc
-	  (when loop-stack (pop loop-stack))
-	  ;; ouvre un nouveau bloc au même niveau
-	  (push (current-indentation) loop-stack)
-	  (forward-word))
+         ;; --- mid-blocks : dépile puis repousse l'indentation courante ---
+         ((looking-at (regexp-opt '("THEN" "REPEAT" "ELSE" "UNTIL") 'words))
+          (when loop-stack (pop loop-stack))
+          (push (current-indentation) loop-stack)
+          (forward-word))
          (t (forward-char 1)))))
-    ;; Phase 2 : calculer l'indentation de la ligne courante
+    ;; Phase 2 : calculer l'indentation à appliquer à la ligne courante.
     (let ((cur-indent
            (save-excursion
              (beginning-of-line)
@@ -137,13 +141,14 @@
               ;; \>> fermant : s'aligne sur le début de la ligne du \<< correspondant
               ((looking-at "\\\\>>")
                (or (car prog-stack) 0))
-              ;; fermetures de boucle : s'alignent sur la ligne d'ouverture
-              ((looking-at (regexp-opt '("NEXT" "END") 'words))
+              ;; fermant s'aligne sur la ligne d'ouverture
+              ((looking-at (regexp-opt '("NEXT" "END" "UNTIL") 'words))
                (or (car loop-stack) 0))
-	      ((looking-at (regexp-opt '("UNTIL" "REPEAT" "ELSE") 'words))
-	       (or (car loop-stack) 0))
-              ;; contenu ordinaire : indentation de l'ouvrant le plus profond + step
-              ;; si aucun bloc ouvert : toplevel → colonne 0
+              ;; mid-block : s'aligne eux aussi sur leur ouvrant
+              ((looking-at (regexp-opt '("THEN" "REPEAT" "ELSE") 'words))
+               (or (car loop-stack) 0))
+              ;; contenu ordinaire : ouvrant le plus profond (toutes piles
+              ;; confondues) + step ; toplevel si aucun bloc ouvert
               (t
                (if (or prog-stack loop-stack)
                    (+ (max (or (car prog-stack) 0)
@@ -151,6 +156,7 @@
                       step)
                  0))))))
       (indent-line-to cur-indent))))
+ 
 
 
 ;; insertion de commentaires pour état de la pile à chaque ligne
@@ -252,9 +258,9 @@
         (setq hp48--unicode-mode nil)
         (message "Mode ASCII (trigraphes)"))
     (progn
-        (hp48-ascii-to-unicode)
-        (setq hp48--unicode-mode t)
-        (message "Mode Unicode"))))
+      (hp48-ascii-to-unicode)
+      (setq hp48--unicode-mode t)
+      (message "Mode Unicode"))))
 
 ;;
 ;; chemin vers x48
@@ -339,11 +345,11 @@ The %s placeholder will be replaced with the device path."
 (define-derived-mode hp48-mode nil "HP48"
   "major mode pour le USERRPL"
   :syntax-table (let ((st (make-syntax-table)))
-		    (modify-syntax-entry ?@ "<" st)
-		    (modify-syntax-entry ?\n ">" st)
-		    (modify-syntax-entry ?\\ "w" st)
-		    st
-		    )
+		  (modify-syntax-entry ?@ "<" st)
+		  (modify-syntax-entry ?\n ">" st)
+		  (modify-syntax-entry ?\\ "w" st)
+		  st
+		  )
   (setq-local comment-start "@")
   (setq-local comment-start-skip "@+\\s-*")
   (setq-local tab-width 2)
@@ -351,38 +357,5 @@ The %s placeholder will be replaced with the device path."
   (setq-local indent-line-function #'hp48-indent-line)
   (add-hook 'completion-at-point-functions #'hp48-completion-at-point nil t)
   )
-;;(define-key hp48-mode-map "\C-c\C-s" 'hp48-send)
-;;(define-key hp48-mode-map "\C-c\C-x" 'hp48-x48)
-;; (add-hook 'hp48-mode-hook (lambda ()  (modify-syntax-entry ?\\ "w")))
 (add-to-list 'auto-mode-alist '("\\.hp48$" . hp48-mode))
 (provide 'hp48-mode)
-
-
-;; ;; snippets
-;; (defun hp48-insert-while ()
-;;   "YASnippet aussi disponible"
-;;   (interactive)
-;;   (let ((positionc (current-column)))
-;;     (save-excursion
-;;       (insert "WHILE REPEAT\n")
-;;       (insert-char ?\s positionc)
-;;       (insert "\n")
-;;       (insert-char ?\s positionc)
-;;       (insert "END")
-;;       )
-;;     )
-;;   (forward-word))
-
-;; (defun hp48-insert-for (start end)
-;;   "YASnippet aussi disponible"
-;;   (interactive "Nstart: \nNend: ")
-;;   (let ((positionc (current-column)))
-;;     (insert (number-to-string start) " " (number-to-string end) " ")
-;;     (insert "FOR I\n")
-;;     (insert-char ?\s positionc)
-;;     (insert "\n")
-;;     (insert-char ?\s positionc)
-;;     (insert "NEXT")
-;;     (forward-line -1)
-;;     (insert-char ?\s positionc)
-;;     ))
