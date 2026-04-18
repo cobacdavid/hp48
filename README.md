@@ -38,5 +38,39 @@ stack-op.rkt> (find-stack-operations '(A B C) '(A C A) 3 #t)
 unrot 3-pick nip
 #t
 ```
+
+### From (A B C) to...
+
+| Dest. | HP-48G | HP-50G |
+| --- | --- | --- |
+| (A A A) | 3-rolld drop2 dup dup | unrot drop2 dup dup |
+| (A A B) | rot drop dup  | rot over nip |
+| (A A C) | swap drop dup | nip dup |
+| (A B A) | swap rot drop over | unrot nip over |
+| (A B B) | rot 3-pick 3-rolld drop | unrot nip dup rot |
+| **(A B C)** |   |   |
+| (A C A) | 3-rolld drop over | unrot 3-pick nip |
+| (A C B) | swap 3-rolld | swap unrot |
+| (A C C) | swap 3-pick 3-rolld drop | 3-pick unrot nip |
+| (B A A) | rot drop dup rot | unrot 3-pick unrot nip |
+| (B A B) | rot drop over | rot 3-pick nip |
+| (B A C) | swap | swap |
+| (B B A) | swap rot drop dup | unrot nip dup |
+| (B B B) | rot drop2 dup dup  | rot drop2 dup dup |
+| (B B C) | drop dup | over nip |
+| (B C A) | 3-rolld  | unrot |
+| (B C B) | over 4-rolld drop | rot nip over |
+| (B C C) | 3-pick 3-rolld drop  | 3-pick unrot drop 
+| (C A A) | swap drop dup rot  | nip dup rot |
+| (C A B) | rot | rot |
+| (C A C) | swap drop over  | nip over |
+| (C B A) | swap rot  | swap rot |
+| (C B B) | drop dup rot  | over nip rot |
+| (C B C) | drop over  | 3-pick nip |
+| (C C A) | 3-rolld drop dup | unrot over nip |
+| (C C B) | drop swap dup  | rot nip dup |
+| (C C C) | drop2 dup dup  | drop2 dup dup |
+
+
 ### License CC-0
 Personal work + Peter Salvi + Claude sonnet
