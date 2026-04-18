@@ -22,21 +22,16 @@ TOS (Top Of Stack ) is on the left.
 ```lisp
 stack-op.rkt> (find-stack-operations '(A B) '(A B A B A B))
 dup2 dup2
-#t
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C))
 swap over 4-pick over
-#t
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C A A))
 Prof. max. atteinte sans résultat
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C A A) 8)
 swap over 4-roll over 4-roll 4-dupn drop
-#t
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A))
-3-rolld drop over
-#t
+swap drop swap over
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A) 3 #t)
-unrot 3-pick nip
-#t
+unrot drop over
 ```
 
 ### From (A B C) to...
