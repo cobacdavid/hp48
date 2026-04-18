@@ -117,7 +117,7 @@
                                                               [(string=? commande "2-rolld") "swap"]
                                                               [(and 50g (string=? commande "3-rolld")) "unrot"]
                                                               [else commande])])
-                                              (if (member cmd '("dup" "dup2" "drop" "drop2" "rot" "swap"))
+                                              (if (member cmd '("drop" "drop2" "dup" "dup2" "over" "rot" "swap"))
                                                   (rec new-lst (- n 1) (append acc (list cmd)))
                                                   (rec new-lst (- n 2) (append acc (list cmd))))
                                                   )))))
