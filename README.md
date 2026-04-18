@@ -30,5 +30,5 @@ stack-op-48.rkt> (find-stack-operations '(A B C) '(A C A B A C A A) 8)
 swap over 4-roll over 4-roll 4-dupn drop
 #t
 ```
-### License MIT
+### License CC-0
 Personal work + Peter Salvi + Claude sonnet
