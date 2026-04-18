@@ -81,7 +81,6 @@
 
 ;;
 ;;
-(displayln *rpl-operations-50*)
 ;;
 (define (call-rpl fn lst)
   ((hash-ref *rpl-operations-48* fn) lst))
@@ -96,9 +95,8 @@
     (let/ec return
       (define (rec lst n [acc '()])
         (cond [(equal? lst to)
-               (displayln (string-join acc " "))
-               (return #t)]
-              [(zero? n) (void)]
+               (return (string-join acc " "))]
+              [(<= n 0) (void)]
               [else
                (hash-for-each rpl-operations
                               (lambda (name fn)
@@ -119,10 +117,39 @@
                                                               [(string=? commande "2-rolld") "swap"]
                                                               [(and 50g (string=? commande "3-rolld")) "unrot"]
                                                               [else commande])])
-                                              (rec new-lst (- n 1) (append acc (list cmd))))))))
+                                              (if (member cmd '("dup" "dup2" "drop" "drop2" "rot" "swap"))
+                                                  (rec new-lst (- n 1) (append acc (list cmd)))
+                                                  (rec new-lst (- n 2) (append acc (list cmd))))
+                                                  )))))
                                     (let ([new-lst (fn lst)])
                                           (when new-lst
                                             (rec new-lst (- n 1) (append acc (list (symbol->string name)))))))))]))
       (for ([n (in-range 0 (+ pmax 1))])
         (rec from n))
-      (displayln "Prof. max. atteinte sans résultat"))))
+      #f)))
+
+
+(define fso
+  (lambda (lst)
+    (let ([res (find-stack-operations '(A B C) lst 5)])
+      (cons lst res))))
+
+; (define a-atteindre '((A B C) (A C B) (B A C) (B C A) (C A B) (C B A)))
+(define a-atteindre '((A A A) (A A B) (A A C)
+                              (A B A) (A B B) (A B C)
+                              (A C A) (A C B) (A C C)
+                              (B A A) (B A B) (B A C)
+                              (B B A) (B B B) (B B C)
+                              (B C A) (B C B) (B C C)
+                              (C A A) (C A B) (C A C)
+                              (C B A) (C B B) (C B C)
+                              (C C A) (C C B) (C C C)))
+
+(let loop ([cpl (map fso a-atteindre)])
+  (when (not (null? cpl))
+    (let* ([soluce (car cpl)]
+           [to (car soluce)]
+           [rpl (cdr soluce)])
+      (displayln (string-append "| (" (string-join (map symbol->string to) " ") ") | " rpl " |"))
+      (loop (cdr cpl)))))
+  
