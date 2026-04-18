@@ -25,8 +25,8 @@ dup2 dup2
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C))
 swap over 4-pick over
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C A A))
-Prof. max. atteinte sans résultat
-stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C A A) 8)
+#f
+stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C A A) 10)
 swap over 4-roll over 4-roll 4-dupn drop
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A))
 swap drop swap over
