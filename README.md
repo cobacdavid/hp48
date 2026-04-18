@@ -43,31 +43,31 @@ unrot 3-pick nip
 
 | Dest. | HP-48G | HP-50G |
 | --- | --- | --- |
-| (A A A) | 3-rolld drop2 dup dup | unrot drop2 dup dup |
-| (A A B) | rot drop dup  | rot over nip |
+| (A A A) | swap rot drop2 dup dup | unrot drop2 dup dup |
+| (A A B) | rot drop dup  | rot  drop dup |
 | (A A C) | swap drop dup | nip dup |
 | (A B A) | swap rot drop over | unrot nip over |
-| (A B B) | rot 3-pick 3-rolld drop | unrot nip dup rot |
+| (A B B) | swap rot drop dup rot | unrot nip dup rot |
 | **(A B C)** |   |   |
-| (A C A) | 3-rolld drop over | unrot 3-pick nip |
+| (A C A) | swap drop swap over | unrot drop over |
 | (A C B) | swap 3-rolld | swap unrot |
-| (A C C) | swap 3-pick 3-rolld drop | 3-pick unrot nip |
-| (B A A) | rot drop dup rot | unrot 3-pick unrot nip |
-| (B A B) | rot drop over | rot 3-pick nip |
+| (A C C) | swap drop swap dup rot | 3-pick unrot nip |
+| (B A A) | rot drop dup rot | rot drop dup rot |
+| (B A B) | rot drop over | rot drop over |
 | (B A C) | swap | swap |
 | (B B A) | swap rot drop dup | unrot nip dup |
-| (B B B) | rot drop2 dup dup  | rot drop2 dup dup |
-| (B B C) | drop dup | over nip |
+| (B B B) | rot drop2 dup dup | rot drop2 dup dup |
+| (B B C) | drop dup | drop dup |
 | (B C A) | 3-rolld  | unrot |
-| (B C B) | over 4-rolld drop | rot nip over |
-| (B C C) | 3-pick 3-rolld drop  | 3-pick unrot drop 
+| (B C B) | drop swap over | rot nip over |
+| (B C C) | drop swap dup rot  | rot nip dup rot |
 | (C A A) | swap drop dup rot  | nip dup rot |
 | (C A B) | rot | rot |
 | (C A C) | swap drop over  | nip over |
 | (C B A) | swap rot  | swap rot |
-| (C B B) | drop dup rot  | over nip rot |
-| (C B C) | drop over  | 3-pick nip |
-| (C C A) | 3-rolld drop dup | unrot over nip |
+| (C B B) | drop dup rot  | drop dup rot |
+| (C B C) | drop over  | drop over |
+| (C C A) | swap drop swap dup | unrot drop dup |
 | (C C B) | drop swap dup  | rot nip dup |
 | (C C C) | drop2 dup dup  | drop2 dup dup |
 
