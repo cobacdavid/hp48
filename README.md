@@ -20,15 +20,15 @@ TOS (Top Of Stack ) is on the left.
 `find-stack-operations` admits two optional arguments, fisrt is max depth, second is a boolean to include HP-50G stack ops (currently only `nip` and `unrot`).
 
 ```lisp
-stack-op-48.rkt> (find-stack-operations '(A B) '(A B A B A B))
+stack-op.rkt> (find-stack-operations '(A B) '(A B A B A B))
 dup2 dup2
 #t
-stack-op-48.rkt> (find-stack-operations '(A B C) '(A C A B A C))
+stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C))
 swap over 4-pick over
 #t
-stack-op-48.rkt>  (find-stack-operations '(A B C) '(A C A B A C A A))
+stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C A A))
 Prof. max. atteinte sans résultat
-stack-op-48.rkt> (find-stack-operations '(A B C) '(A C A B A C A A) 8)
+stack-op.rkt> (find-stack-operations '(A B C) '(A C A B A C A A) 8)
 swap over 4-roll over 4-roll 4-dupn drop
 #t
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A))
