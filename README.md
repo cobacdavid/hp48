@@ -17,6 +17,8 @@ This script is a Racket adaptation for HP-48 of [P. Salvi's common-lisp work](ht
 This racket script finds shortest sequence of stack operations from a stack state to another given a maximum search-depth (default is 5).
 TOS (Top Of Stack ) is on the left.
 
+`find-stack-operations` admits two optional arguments, fisrt is max depth, second is a boolean to include HP-50G stack ops (currently only `nip` and `unrot`).
+
 ```lisp
 stack-op-48.rkt> (find-stack-operations '(A B) '(A B A B A B))
 dup2 dup2
@@ -28,6 +30,12 @@ stack-op-48.rkt>  (find-stack-operations '(A B C) '(A C A B A C A A))
 Prof. max. atteinte sans résultat
 stack-op-48.rkt> (find-stack-operations '(A B C) '(A C A B A C A A) 8)
 swap over 4-roll over 4-roll 4-dupn drop
+#t
+stack-op.rkt> (find-stack-operations '(A B C) '(A C A))
+3-rolld drop over
+#t
+stack-op.rkt> (find-stack-operations '(A B C) '(A C A) 3 #t)
+unrot 3-pick nip
 #t
 ```
 ### License CC-0
