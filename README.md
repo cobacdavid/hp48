@@ -36,35 +36,36 @@ unrot drop over
 
 ### From (A B C) to...
 
-| Dest. | HP-48G | HP-50G |
-| --- | --- | --- |
-| (A A A) | swap rot drop2 dup dup | unrot drop2 dupdup |
-| (A A B) | rot drop dup  | rot over nip |
-| (A A C) | swap drop dup | nip dup |
-| (A B A) | swap rot drop over |  dup 3-unpick |
-| (A B B) | rot drop over swap | over 3-unpick |
-| **(A B C)** |   |   |
-| (A C A) | swap drop swap over | unrot drop over |
-| (A C B) | swap 3-rolld | swap unrot |
-| (A C C) | swap drop over swap | nip over swap |
-| (B A A) | rot drop dup rot | swap over 3-unpick |
-| (B A B) | rot drop over | rot drop over |
-| (B A C) | swap | swap |
-| (B B A) | swap rot drop dup | 2-unpick dup |
-| (B B B) | rot drop2 dup dup | rot drop2 dupdup |
-| (B B C) | drop dup | over nip |
-| (B C A) | 3-rolld  | unrot |
-| (B C B) | drop swap over | rot nip over |
-| (B C C) | drop over swap | drop over swap |
-| (C A A) | swap drop dup rot  | nip dup rot |
-| (C A B) | rot | rot |
-| (C A C) | swap drop over  | nip over |
-| (C B A) | swap rot  | swap rot |
-| (C B B) | drop dup rot  | over nip rot |
-| (C B C) | drop over  | drop over |
-| (C C A) | swap drop swap dup | unrot over nip |
-| (C C B) | drop swap dup  | rot nip dup |
-| (C C C) | drop2 dup dup  | drop2 dupdup |
+| Dest. | HP-48G | HP-50G | Gain |
+| --- | --- | --- | --- |
+| (A A A) | swap rot drop2 dup dup | unrot drop2 dupdup | 40.0% |
+| (A A B) | rot drop dup | rot over nip | 0.0% |
+| (A A C) | swap drop dup | nip dup | 33.3% |
+| (A B A) | swap rot drop over | dup 3-unpick | 25.0% |
+| (A B B) | rot drop over swap | over 3-unpick | 25.0% |
+| (A B C) |  |  |  |
+| (A C A) | swap drop swap over | unrot drop over | 25.0% |
+| (A C B) | swap 3-rolld | swap unrot | 33.3% |
+| (A C C) | swap drop over swap | nip over swap | 25.0% |
+| (B A A) | rot drop dup rot | swap over 3-unpick | 0.0% |
+| (B A B) | rot drop over | rot drop over | 0.0% |
+| (B A C) | swap | swap | 0.0% |
+| (B B A) | swap rot drop dup | 2-unpick dup | 25.0% |
+| (B B B) | rot drop2 dup dup | rot drop2 dupdup | 25.0% |
+| (B B C) | drop dup | over nip | 0.0% |
+| (B C A) | 3-rolld | unrot | 50.0% |
+| (B C B) | drop swap over | rot nip over | 0.0% |
+| (B C C) | drop over swap | drop over swap | 0.0% |
+| (C A A) | swap drop dup rot | nip dup rot | 25.0% |
+| (C A B) | rot | rot | 0.0% |
+| (C A C) | swap drop over | nip over | 33.3% |
+| (C B A) | swap rot | swap rot | 0.0% |
+| (C B B) | drop dup rot | over nip rot | 0.0% |
+| (C B C) | drop over | drop over | 0.0% |
+| (C C A) | swap drop swap dup | unrot over nip | 25.0% |
+| (C C B) | drop swap dup | rot nip dup | 0.0% |
+| (C C C) | drop2 dup dup | drop2 dupdup | 33.3% |
+| **Moyenne** | 3.1 | 2.5 | **16.3%** |
 
 
 ### License CC-0
