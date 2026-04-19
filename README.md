@@ -17,7 +17,7 @@ This script is a Racket adaptation for HP-48 of [P. Salvi's common-lisp work](ht
 This racket script finds shortest sequence of stack operations from a stack state to another given a maximum search-depth (default is 5).
 TOS (Top Of Stack ) is on the left.
 
-`find-stack-operations` admits two optional arguments, fisrt is max depth, second is a boolean to include HP-50G stack ops (currently only `nip` and `unrot`).
+`find-stack-operations` admits two optional arguments, fisrt is max depth, second is a boolean to include HP-50G stack ops (currently only `dupdup`, `nip`, `unpick` et `unrot`).
 
 ```lisp
 stack-op.rkt> (find-stack-operations '(A B) '(A B A B A B))
@@ -38,7 +38,7 @@ unrot drop over
 
 | Dest. | HP-48G | HP-50G |
 | --- | --- | --- |
-| (A A A) | swap rot drop2 dup dup | unrot drop2 dup dup |
+| (A A A) | swap rot drop2 dup dup | unrot drop2 dupdup |
 | (A A B) | rot drop dup  | rot over nip |
 | (A A C) | swap drop dup | nip dup |
 | (A B A) | swap rot drop over | unrot nip over |
@@ -51,7 +51,7 @@ unrot drop over
 | (B A B) | rot drop over | rot drop over |
 | (B A C) | swap | swap |
 | (B B A) | swap rot drop dup | unrot nip dup |
-| (B B B) | rot drop2 dup dup | rot drop2 dup dup |
+| (B B B) | rot drop2 dup dup | rot drop2 dupdup |
 | (B B C) | drop dup | over nip |
 | (B C A) | 3-rolld  | unrot |
 | (B C B) | drop swap over | rot nip over |
@@ -64,7 +64,7 @@ unrot drop over
 | (C B C) | drop over  | drop over |
 | (C C A) | swap drop swap dup | unrot over nip |
 | (C C B) | drop swap dup  | rot nip dup |
-| (C C C) | drop2 dup dup  | drop2 dup dup |
+| (C C C) | drop2 dup dup  | drop2 dupdup |
 
 
 ### License CC-0
