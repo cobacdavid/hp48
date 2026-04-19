@@ -85,16 +85,16 @@
 (defrpl unpick 50 n
    (let* ([n (first lst)]
           [pile (rest lst)]
-          [debut (take pile (+ n 1))]
+          [debut (take pile n)]
           [fin (drop pile (+ n 1))])
-     (append (take (rest debut) n) (list (first pile)) fin)))
+     (append (rest debut) (list (first pile)) fin)))
 ;;
 ;;
 ;;
 (define (call-rpl fn lst)
   ((hash-ref *rpl-operations-48* fn) lst))
 
-(define (find-stack-operations from-list to-list [pmax 5] [50g #f])
+(define (find-stack-operations from-list to-list #:pmax [pmax 5] #:50g [50g #f])
   (let* ([from from-list]
          [to to-list]
          [im48g (make-immutable-hash (hash->list *rpl-operations-48*))]
@@ -103,9 +103,9 @@
                              *rpl-operations-48*)])
     (let/ec return
       (define (rec lst n [acc '()])
-        (cond [(equal? lst to)
+        (cond [(and (equal? lst to) (>= n 0))
                (return (string-join acc " "))]
-              [(<= n 0) (void)]
+              [(< n 0) (void)]
               [else
                (hash-for-each rpl-operations
                               (lambda (name fn)
@@ -143,24 +143,36 @@
       (for ([n (in-range 0 (+ pmax 1))])
         (rec from n))
       #f)))
+;;
+;;
+;;
+;;
+;;
+;;
+(define alphabet '(A B C))
 
-
+(define (tuples n)
+  (if (= n 0) '(())
+      (apply append
+             (map (lambda (x)
+                    (map (lambda (rest)
+                           (cons x rest))
+                         (tuples (- n 1))))
+                  alphabet))))
 (define fso
   (lambda (lst)
-    (let ([res (find-stack-operations '(A B C) lst 5 #t)])
+    (let ([res (find-stack-operations '(A B C) lst #:50g #t)])
       (cons lst res))))
 
-(define a-atteindre '(
-                      (A A A) (A A B) (A A C) (A B A) (A B B) (A B C) (A C A) (A C B) (A C C)
-                      (B A A) (B A B) (B A C) (B B A) (B B B) (B B C) (B C A) (B C B) (B C C)
-                      (C A A) (C A B) (C A C) (C B A) (C B B) (C B C) (C C A) (C C B) (C C C)
-                      ))
+(define a-atteindre (tuples 3))
 
 (let loop ([cpl (map fso a-atteindre)])
   (when (not (null? cpl))
     (let* ([soluce (car cpl)]
            [to (car soluce)]
            [rpl (cdr soluce)])
-      (displayln (string-append "| (" (string-join (map symbol->string to) " ") ") | " rpl " |"))
+      (displayln (string-append "| (" (string-join (map symbol->string to) " ") ") | "
+                                (if rpl rpl "X")
+                                " |"))
       (loop (cdr cpl)))))
   
