@@ -79,6 +79,15 @@
 (defrpl unrot 50 3
   (list* (second lst) (third lst) (first lst) (drop lst 3)))
 
+(defrpl dupdup 50 1
+  (list* (first lst) (first lst) lst))
+
+(defrpl unpick 50 n
+   (let* ([n (first lst)]
+          [pile (rest lst)]
+          [debut (take pile (+ n 1))]
+          [fin (drop pile (+ n 1))])
+     (append (take (rest debut) n) (list (first pile)) fin)))
 ;;
 ;;
 ;;
@@ -121,9 +130,16 @@
                                                   (rec new-lst (- n 1) (append acc (list cmd)))
                                                   (rec new-lst (- n 2) (append acc (list cmd))))
                                                   )))))
-                                    (let ([new-lst (fn lst)])
+                                    (if (member name '(unpick))
+                                        (for ([k (in-range 1 5)])
+                                          (when (>= (length lst) (+ k 1))
+                                            (let ([new-lst (fn (list* k lst))])
+                                               (when new-lst
+                                                 (let ([commande (string-append (number->string k) "-" (symbol->string name))])
+                                                   (rec new-lst (- n 2) (append acc (list commande))))))))
+                                        (let ([new-lst (fn lst)])
                                           (when new-lst
-                                            (rec new-lst (- n 1) (append acc (list (symbol->string name)))))))))]))
+                                            (rec new-lst (- n 1) (append acc (list (symbol->string name))))))))))]))
       (for ([n (in-range 0 (+ pmax 1))])
         (rec from n))
       #f)))
@@ -131,19 +147,14 @@
 
 (define fso
   (lambda (lst)
-    (let ([res (find-stack-operations '(A B C) lst 5)])
+    (let ([res (find-stack-operations '(A B C) lst 5 #t)])
       (cons lst res))))
 
-; (define a-atteindre '((A B C) (A C B) (B A C) (B C A) (C A B) (C B A)))
-(define a-atteindre '((A A A) (A A B) (A A C)
-                              (A B A) (A B B) (A B C)
-                              (A C A) (A C B) (A C C)
-                              (B A A) (B A B) (B A C)
-                              (B B A) (B B B) (B B C)
-                              (B C A) (B C B) (B C C)
-                              (C A A) (C A B) (C A C)
-                              (C B A) (C B B) (C B C)
-                              (C C A) (C C B) (C C C)))
+(define a-atteindre '(
+                      (A A A) (A A B) (A A C) (A B A) (A B B) (A B C) (A C A) (A C B) (A C C)
+                      (B A A) (B A B) (B A C) (B B A) (B B B) (B B C) (B C A) (B C B) (B C C)
+                      (C A A) (C A B) (C A C) (C B A) (C B B) (C B C) (C C A) (C C B) (C C C)
+                      ))
 
 (let loop ([cpl (map fso a-atteindre)])
   (when (not (null? cpl))
