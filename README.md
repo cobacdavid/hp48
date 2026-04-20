@@ -14,10 +14,21 @@ Personal work + @XahLee on YT + Claude sonnet
 ## Find Stack Operations 
 This script is a Racket adaptation for HP-48 of [P. Salvi's common-lisp work](https://salvi.chaosnet.org/snippets/forth-stack.html) for Forth language.
 
-This racket script finds shortest sequence of stack operations from a stack state to another given a maximum search-depth (default is 5).
+This racket script finds shortest sequence of stack operations from a stack state to another given a maximum search-depth 
 TOS (Top Of Stack ) is on the left.
 
-`find-stack-operations` admits two optional arguments, fisrt is `pmax` depth, second is `50g` a boolean to include HP-50G stack ops (currently only `dupdup`, `nip`, `unpick` et `unrot`).
+This lib/script includes three functions: 
+ - `find-stack-operations` which takes:
+   - two arguments: a source list and a destonation list (see examples below) ;
+   - two optional arguments: `pmax` the search depth (default is 5), and `50g` a boolean to include HP-50G stack ops (`dupdup`, `nip`, `unpick` and `unrot`, so no `ndupn`) (default is `#f`).
+   
+   and returns a list of RPN operations.
+ - `stack-after-op` which takes two arguments, a source list and a list of operations (symbols),  and returns a new stack (list).
+ - `optimize` which takes:
+   - one argument: a list of operations ;
+   - one optional argument `50g` a boolean value (default is `#f`) to include the HP-50G set of stack operations.
+
+   and returns a string (in French) to optimize your operations in a shorter version.
 
 ```lisp
 stack-op.rkt> (find-stack-operations '(A B) '(A B A B A B))
@@ -32,6 +43,14 @@ stack-op.rkt> (find-stack-operations '(A B C) '(A C A))
 swap drop swap over
 stack-op.rkt> (find-stack-operations '(A B C) '(A C A) #:50g #t)
 unrot drop over
+stack-op.rkt> (find-stack-operations '(A B C O) '(C O B A C) #:50g #t)
+swap 4-roll 4-pick
+stack-op.rkt> (stack-after-op '(A B C D) '(nip drop))
+'(C D)
+stack-op.rkt> (optimize '(swap over swap))
+dup rot est une meilleure solution que swap over swap
+stack-op.rkt> (optimize '(drop drop dup nip dup) #:50g #t)
+drop2 dup est une meilleure solution que drop drop dup nip dup
 ```
 
 ### From (A B C) to...
