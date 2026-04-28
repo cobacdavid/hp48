@@ -9,11 +9,12 @@
   '("ADD" "AND" "APPLY" "ARC"
     "BAR" "BEEP" "BLANK" "BOX"
     "CASE" "CF" "CHOOSE" "CHR" "CLLCD" "CYLIN"
-    "DATE" "DISP" "DO" "DOERR" "DOLIST" "DOSUBS"
+    "DATE" "DISP" "DO" "DOERR" "DOLIST" "DOSUBS" "DTAG"
     "ELSE" "END" "ENDSUB" "ERASE" "EVAL"
-    "FC\?" "FC\?C" "FOR" "FS\?" "FS\?C"
+    "FC\\?" "FC\\?C" "FOR" "FS\\?" "FS\\?C"
     "GET" "GETI" "GOR" "GROB"
     "IF" "IFT" "IFTE"
+    "KILL"
     "LAST" "LASTARG" "LIST"
     "NEXT" "NOT"
     "OR"
@@ -27,16 +28,21 @@
     "YRNG"
     ))
 
+;; Commandes de conversion contenant \->
+;; Dans le buffer (mode ASCII/trigraphes), le backslash est un caractère
+;; littéral. Pour le matcher en regex il faut \\ dans la regex, soit
+;; \\\\ dans un string Elisp.  On n'utilise PAS 'words car \b en fin
+;; de pattern ne matche pas après > (caractère non-word).
 (defvar hp48-convwords
   '("ARRY\\->" "\\->ARRY"
     "B\\->R"
     "C\\->PX" "C\\->R"
     "COL\\->" "\\->COL"
     "D\\->R"
-    "\\->DATE" 
+    "\\->DATE"
     "\\->LIST"
     "NUM\\->" "\\->NUM"
-    "OBJ\\->"
+    "OBJ\\->" "\\->OBJ"
     "R\\->B" "R\\->C"
     "STR\\->" "\\->STR"
     "TAG\\->" "\\->TAG"
@@ -48,14 +54,15 @@
     "DEG" "DOT"
     "EXP"
     "FLOOR" "FP"
-    "GRAD" "\\GSLIST"
+    "GRAD" "\\\\GSLIST"
     "IP" "IM"
     "LN" "LOG"
     "MAX" "MIN" "MOD"
-    "\\PILIST"
+    "NEG"
+    "\\\\PILIST"
     "RAD" "RAND" "RE"
     "SIGN" "SIN" "SQ"
-    "\\v/"
+    "\\\\v/"
     ))
 
 (defvar hp48-stackwords
@@ -66,23 +73,31 @@
     "SIZE" "SWAP"))
 
 (defvar hp48-re-w (regexp-opt hp48-words 'words))
-(defvar hp48-re-cv (regexp-opt hp48-convwords 'words))
+;; \b seulement au début : les patterns finissant par > n'ont pas de
+;; frontière de mot après eux, mais > n'est jamais suivi d'un autre
+;; identifiant HP48 sans espace, donc pas de faux positif.
+(defvar hp48-re-cv (concat "\\b" (regexp-opt hp48-convwords)))
 (defvar hp48-re-mw (regexp-opt hp48-mathwords 'words))
 (defvar hp48-re-sw (regexp-opt hp48-stackwords 'words))
-(defvar hp48-keywords (list
-		       (cons hp48-re-w 'font-lock-keyword-face)
-		       (cons hp48-re-cv 'font-lock-type-face)
-		       (cons hp48-re-mw 'font-lock-function-name-face)
-		       (cons hp48-re-sw 'font-lock-builtin-face)
-		       (cons "\\\\<<\\|\\\\>>" 'font-lock-keyword-face)
-		       (cons "{.*?}" 'font-lock-constant-face)
-		       (cons "\\[.*?\\]" 'font-lock-constant-face)
-		       (cons "'.*?'" 'font-lock-constant-face)
-		       (cons "@.*" 'font-lock-comment-face)
-		       ;; "\\->" est à part car si dans convwords, il ne se highlighte pas seul
-		       (cons "\\\\->" 'font-lock-type-face)
-		       )
-  )
+
+(defvar hp48-keywords
+  (list
+   ;; Avertissement : caractères au-delà de la colonne 23
+   ;; Le groupe 1 capture le surplus, coloré en warning.
+   ;; Utile pour l'impression thermique.
+   '("^.\\{23\\}\\(.+\\)" (1 font-lock-warning-face t))
+   (cons hp48-re-w  'font-lock-keyword-face)
+   (cons hp48-re-cv 'font-lock-type-face)
+   (cons hp48-re-mw 'font-lock-function-name-face)
+   (cons hp48-re-sw 'font-lock-builtin-face)
+   (cons "\\\\<<\\|\\\\>>" 'font-lock-keyword-face)
+   (cons "{.*?}"    'font-lock-constant-face)
+   (cons "\\[.*?\\]" 'font-lock-constant-face)
+   (cons "'.*?'"    'font-lock-constant-face)
+   (cons "@.*"      'font-lock-comment-face)
+   ;; \-> seul (flèche de conversion standalone)
+   (cons "\\\\->"  'font-lock-type-face)
+   ))
 
 (defun hp48-completion-at-point ()
   (let ((bounds (bounds-of-thing-at-point 'word)))
@@ -142,10 +157,10 @@
               ((looking-at "\\\\>>")
                (or (car prog-stack) 0))
               ;; fermant s'aligne sur la ligne d'ouverture
-              ((looking-at (regexp-opt '("NEXT" "END" "UNTIL") 'words))
+              ((looking-at (regexp-opt '("NEXT" "END" "STEP") 'words))
                (or (car loop-stack) 0))
               ;; mid-block : s'aligne eux aussi sur leur ouvrant
-              ((looking-at (regexp-opt '("THEN" "REPEAT" "ELSE") 'words))
+              ((looking-at (regexp-opt '("UNTIL" "THEN" "REPEAT" "ELSE") 'words))
                (or (car loop-stack) 0))
               ;; contenu ordinaire : ouvrant le plus profond (toutes piles
               ;; confondues) + step ; toplevel si aucun bloc ouvert
@@ -262,7 +277,7 @@
       (setq hp48--unicode-mode t)
       (message "Mode Unicode"))))
 
-;;
+;; gestion x48
 ;; chemin vers x48
 (defcustom hp48-x48-execpath "/usr/bin/x48"
   "Path to the x48 executable."
@@ -276,6 +291,7 @@
 
 ;; communication kermit
 (defcustom hp48-kermit-config
+  ;; IOPAR: { 9600 0 0 0 1 3 }
   "#!/usr/bin/kermit +
 set line %s
 set speed 9600
@@ -315,7 +331,7 @@ The %s placeholder will be replaced with the device path."
 (defun hp48-send (port)
   (interactive
    (list (completing-read "Port: "
-                          '("/dev/ttyUSB0" "/dev/pts/2")
+                          '("/dev/ttyUSB0" "/dev/pts/1")
                           nil nil nil nil
                           hp48--last-port)))
   (message "Choix de %s" port)
@@ -334,11 +350,66 @@ The %s placeholder will be replaced with the device path."
       (delete-file hp48-kermit-configfile)
       (delete-file nf))))
 
+;;
+;; impression
+(defcustom hp48-printer-name "QL-700"
+  "Nom de l'imprimante d'étiquettes pour l'impression HP48."
+  :type 'string
+  :group 'hp48)
+
+(defcustom hp48-label-width-mm 62
+  "Largeur de l'étiquette en millimètres."
+  :type 'integer
+  :group 'hp48)
+
+(defcustom hp48-label-line-height-mm 4
+  "Hauteur d'une ligne en millimètres pour le calcul de la hauteur d'étiquette."
+  :type 'integer
+  :group 'hp48)
+
+(defun hp48-print-label ()
+  "Imprime le buffer HP48 sur l'imprimante d'étiquettes QL-700.
+La version imprimée est dans un buffer temporaire avec :
+  - conversion ASCII (trigraphes) → Unicode
+  - suppression des commentaires inline (@ non en début de ligne)"
+  (interactive)
+  (let ((source-buffer (current-buffer)))
+    (with-temp-buffer
+      ;; Copie du buffer source
+      (insert-buffer-substring source-buffer)
+      ;; Conversion ASCII → Unicode
+      (let ((case-fold-search nil))
+        (dolist (pair (reverse hp48-unicode-to-tio))
+          (goto-char (point-min))
+          (while (search-forward (cdr pair) nil t)
+            (replace-match (car pair) t t))))
+      ;; Suppression des commentaires non en début de ligne
+      (goto-char (point-min))
+      (while (not (eobp))
+        (unless (looking-at "\\s-*@") ; "Vraie" ligne de commentaire 
+          (when (re-search-forward "\\s-*@.*" (line-end-position) t)
+            (replace-match "" t t)))
+        (forward-line 1))
+      ;; Impression
+      (let* ((lines (count-lines (point-min) (point-max)))
+             (line-height-mm hp48-label-line-height-mm)
+             (margin-mm 10)
+             (height-mm (round (+ (* lines line-height-mm) margin-mm)))
+             (page-size (format "Custom.%dx%dmm" hp48-label-width-mm height-mm)))
+        (setq lpr-switches
+              (list "-P" hp48-printer-name
+                    "-o" "print-quality=5"
+                    "-o" (concat "PageSize=" page-size)))
+        (lpr-buffer)
+	(message "Impression sur %s de %d lignes. En cas de souci, changez la valeur de hp48-label-line-height-mm"
+		 hp48-printer-name lines)))))
+
 ;; les raccourcis clavier
 (defvar-keymap hp48-mode-map
   "C-c C-c" #'hp48-add-stack-comments
   "C-c C-u" #'hp48-toggle-unicode
   "C-c C-s" #'hp48-send
+  "C-c C-p" #'hp48-print-label
   "C-c C-x" #'hp48-x48)
 
 ;; hp48 mode
@@ -355,7 +426,16 @@ The %s placeholder will be replaced with the device path."
   (setq-local tab-width 2)
   (setq-local font-lock-defaults '(hp48-keywords))
   (setq-local indent-line-function #'hp48-indent-line)
+  ;; Indicateur visuel à 23 colonnes
+  (setq-local fill-column 23)
+  (display-fill-column-indicator-mode 1)
   (add-hook 'completion-at-point-functions #'hp48-completion-at-point nil t)
+  (add-hook 'hp48-mode-hook #'indent-bars-mode)
+  (add-hook 'hp48-mode-hook
+          (lambda ()
+	    (setq-local indent-tabs-mode nil)
+            (setq-local indent-bars-spacing-override 2)))
   )
+
 (add-to-list 'auto-mode-alist '("\\.hp48$" . hp48-mode))
 (provide 'hp48-mode)
