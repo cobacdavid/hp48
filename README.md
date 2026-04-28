@@ -3,10 +3,18 @@
 
  - works with `.hp48` suffix files
  - shortcuts:
-   - `C-c C-x` launches `x48` (path is set to `/usr/bin/x48` with `hp48-x48-execpath` variable)
-   - `C-c C-s` sends to a port (e.g. `/dev/ttyUSB0`, `dev/pts/2` ...) using `kermit` communication. The script used to establish the communication is set according to my HP-48 setup (ASCII etc.).
+   - `C-c C-x` launches `x48` (path is set to `/usr/bin/x48` with `hp48-x48-execpath` variable --- see below)
+   - `C-c C-s` sends to a port (e.g. `/dev/ttyUSB0`, `dev/pts/1` ...) using `kermit` communication. The script used to establish the communication is set according to my HP-48 setup (ASCII etc.).
    - `C-c C-u` toggles from/to unicode from/to ASCII (e.g. `ΣLIST` switches with `\GSLIST`)
    - `C-c C-c` adds a comment colon on each non-comment line to keep trace of stack state (avoid write-only code effect)
+   - `C-c C-p` prints HP-48 code using `lpr` command using unicode version. This is dedicated to print on a label thermic printer faking `HP 82240B`.
+ - custom variables:
+   - `hp48-x48-execpath`: full path of `x48` emulator
+   - `hp48-kermit-config`: a multiline string setting up `kermit` communication
+   - `hp48-default-port-node`: port to use with `kermit`
+   - `hp48-printer-name`: `CUPS` name of your printer
+   - `hp48-label-width-mm`: width of your printer's sheet
+   - `hp48-label-line-height-mm`: height of a single code line (depends of the font used)
 
 ### License MIT
 Personal work + @XahLee on YT + Claude sonnet
