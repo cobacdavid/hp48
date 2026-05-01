@@ -246,8 +246,6 @@
          [soluce-string (find-stack-operations from-list nv-st #:50g 50g)]
          [from-string (string-join (map symbol->string from-list) " ")]
          [op-list-string (string-join (map symbol->string op-list) " ")])
-    (println from-list)
-    (println nv-st)
     (cond [(string=? soluce-string op-list-string) (displayln (string-append op-list-string " est excellent."))]
           [(= (length (regexp-split #px"[ -]" soluce-string))
               (length (regexp-split #px"[ -]" op-list-string)))
