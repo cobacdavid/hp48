@@ -97,7 +97,7 @@
   (list* (second lst) lst))
 
 (defrpl rot l48 3
-  (list* (third lst) (second lst) (first lst) (drop lst 3)))
+  (list* (third lst) (first lst) (second lst) (drop lst 3)))
 
 (defrpl swap l48 2
   (list* (second lst) (first lst) (drop lst 2)))
@@ -172,25 +172,32 @@
 ;;   (let ([n (first lst)])
 ;;     (append (list n) (make-list n (second lst)) lst)))
 
+
+(define (elements-still-in-to-list? current-stack to)
+  (andmap (lambda (elem) (member elem current-stack)) to))
 ;;
 ;;
 (define (find-stack-operations from-list to-list #:pmax [pmax 5] #:50g [50g #f])
   (let* ([from from-list]
          [to to-list]
+         [maxk (max (length from) (length to))]
          [im48g (make-immutable-hash (hash->list *rpl-operations-48*))]
          [im50g (make-immutable-hash (hash->list *rpl-operations-50*))]
          [rpl-operations (if 50g (hash-union im48g im50g)
-                             *rpl-operations-48*)])
+                             *rpl-operations-48*)]
+         [set-to-list (remove-duplicates to-list)])
+    ; 
     (let/ec return
       (define (rec lst n [acc '()])
         (cond [(and (equal? lst to) (>= n 0))
-               (return (string-join acc " "))]
+               (return (string-join (reverse acc) " "))]
               [(< n 0) (void)]
+              [(not (elements-still-in-to-list? lst set-to-list)) (void)]
               [else
                (hash-for-each rpl-operations
                               (lambda (name fn)
                                 (if (hash-has-key? *rpl-operations-48* name)
-                                    (for ([k (in-range 1 5)])
+                                    (for ([k (in-range 1 (+ 1 maxk))])
                                       (when (>= (length lst) k)
                                         (let ([new-lst (fn (list* k lst))])
                                           (when new-lst
@@ -207,11 +214,11 @@
                                                               [(and 50g (string=? commande "3-rolld")) "unrot"]
                                                               [else commande])])
                                               (if (member cmd '("drop" "drop2" "dup" "dup2" "over" "rot" "swap"))
-                                                  (rec new-lst (- n 1) (append acc (list cmd)))
-                                                  (rec new-lst (- n 2) (append acc (list cmd))))
+                                                  (rec new-lst (- n 1) (cons cmd acc))
+                                                  (rec new-lst (- n 2) (cons cmd acc)))
                                               )))))
                                     (if (member name '(unpick))
-                                        (for ([k (in-range 1 5)])
+                                        (for ([k (in-range 1 (+ 1 maxk))])
                                           (when (>= (length lst) (+ k 1))
                                             (let ([new-lst (fn (list* k lst))])
                                               (when new-lst
@@ -239,6 +246,8 @@
          [soluce-string (find-stack-operations from-list nv-st #:50g 50g)]
          [from-string (string-join (map symbol->string from-list) " ")]
          [op-list-string (string-join (map symbol->string op-list) " ")])
+    (println from-list)
+    (println nv-st)
     (cond [(string=? soluce-string op-list-string) (displayln (string-append op-list-string " est excellent."))]
           [(= (length (regexp-split #px"[ -]" soluce-string))
               (length (regexp-split #px"[ -]" op-list-string)))
