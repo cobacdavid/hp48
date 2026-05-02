@@ -1,5 +1,6 @@
 ;;; hp48-mode.el --- une tentative de mode pour éditer des programmes userRPL de HP48
-;;; Author: David Cobac 
+;;; Author: David Cobac
+;;; Date: 2025-2026
 
 ;; Xah Lee "Emacs Lisp Write Python Mode" 
 ;; https://www.youtube.com/watch?v=ANQNLuKodHA&t=71s
@@ -80,23 +81,84 @@
 (defvar hp48-re-mw (regexp-opt hp48-mathwords 'words))
 (defvar hp48-re-sw (regexp-opt hp48-stackwords 'words))
 
+;; Calcule la colonne ASCII correspondant à la colonne unicode TARGET dans LINE.
+;; En mode ASCII, les trigraphes (ex. \<< = 3 chars) comptent pour 1 char imprimé.
+(defun hp48--ascii-col-for-unicode-col (line target)
+  (let ((apos 0)
+        (ucol 0)
+        (len  (length line))
+        ;; On ignore la première entrée (\\ → \\, identité) du tableau
+        (trigraphs (mapcar #'cdr (cdr hp48-unicode-to-tio))))
+    (while (and (< apos len) (< ucol target))
+      (let ((matched nil))
+        (dolist (tri trigraphs)
+          (unless matched
+            (let ((tlen (length tri)))
+              (when (and (<= (+ apos tlen) len)
+                         (string= (substring line apos (+ apos tlen)) tri))
+                (setq apos (+ apos tlen) ucol (1+ ucol) matched t)))))
+        (unless matched
+          (setq apos (1+ apos) ucol (1+ ucol)))))
+    apos))
+
+;; Matcher font-lock dynamique : repère le surplus au-delà de la colonne 23
+;; unicode sur chaque ligne, quelle que soit le mode (ASCII ou unicode).
+;; 23 est +/- le nombre de caractères utilisés sur l'imprimante thermique
+;; originale de HP et reprise ici
+(defun hp48--overflow-matcher (limit)
+  (let (found)
+    (while (and (not found) (< (point) limit))
+      (let* ((bol (line-beginning-position))
+             (eol (line-end-position))
+             (overflow
+              (if hp48--unicode-mode
+                  (+ bol 23)
+                (+ bol (hp48--ascii-col-for-unicode-col
+                        (buffer-substring-no-properties bol eol) 23)))))
+        (if (< overflow eol)
+            (progn
+              (set-match-data (list overflow eol))
+              (goto-char (1+ eol))
+              (setq found t))
+          (forward-line 1))))
+    found))
+
 (defvar hp48-keywords
   (list
-   ;; Avertissement : caractères au-delà de la colonne 23
-   ;; Le groupe 1 capture le surplus, coloré en warning.
-   ;; Utile pour l'impression thermique.
-   '("^.\\{23\\}\\(.+\\)" (1 font-lock-warning-face t))
+   ;; Avertissement : caractères au-delà de la colonne 23 (en largeur unicode).
+   ;; Le matcher dynamique tient compte des trigraphes en mode ASCII.
+   '(hp48--overflow-matcher (0 font-lock-warning-face t))
    (cons hp48-re-w  'font-lock-keyword-face)
    (cons hp48-re-cv 'font-lock-type-face)
+   ;; Équivalents unicode des convwords (→ à la place de \->)
+   ;; section à revoir avec le tableau d'association fait après pour les conversions
+   ;; qui avaient déjà été faites...
+   (cons (regexp-opt
+          '("ARRY→" "→ARRY"
+            "B→R"
+            "C→PX" "C→R"
+            "COL→" "→COL"
+            "D→R"
+            "→DATE"
+            "→LIST"
+            "NUM→" "→NUM"
+            "OBJ→" "→OBJ"
+            "R→B" "R→C"
+            "STR→" "→STR"
+            "TAG→" "→TAG"))
+         'font-lock-type-face)
    (cons hp48-re-mw 'font-lock-function-name-face)
+   ;; Équivalents unicode des mathwords (√, ΣLIST, ΠLIST)
+   (cons "√\\|ΣLIST\\|ΠLIST" 'font-lock-function-name-face)
    (cons hp48-re-sw 'font-lock-builtin-face)
-   (cons "\\\\<<\\|\\\\>>" 'font-lock-keyword-face)
+   ;; \<< \>> et leurs équivalents unicode « »
+   (cons "\\\\<<\\|\\\\>>\\|«\\|»" 'font-lock-keyword-face)
    (cons "{.*?}"    'font-lock-constant-face)
    (cons "\\[.*?\\]" 'font-lock-constant-face)
    (cons "'.*?'"    'font-lock-constant-face)
    (cons "@.*"      'font-lock-comment-face)
-   ;; \-> seul (flèche de conversion standalone)
-   (cons "\\\\->"  'font-lock-type-face)
+   ;; \-> seul et son équivalent unicode → (standalone)
+   (cons "\\\\->\\|→" 'font-lock-type-face)
    ))
 
 (defun hp48-completion-at-point ()
@@ -203,48 +265,155 @@
         (forward-line 1)))))
 
 ;; conversion unicode vers ascii
+;; https://www.azimonti.com/hp48gx/
 (defvar hp48-unicode-to-tio
   '(("\\\\" . "\\\\")       ; backslash en premier
-    ("∠"  . "\\<)")
-    ("x̄"  . "\\x-")
-    ("∇"  . "\\.V")
-    ("√"  . "\\v/")
-    ("∫"  . "\\.S")
-    ("Σ"  . "\\GS")
-    ("▶"  . "\\|>")
-    ("π"  . "\\pi")
-    ("∂"  . "\\.d")
-    ("≤"  . "\\<=")
-    ("≥"  . "\\>=")
-    ("≠"  . "\\=")
-    ("α"  . "\\Ga")
-    ("→"  . "\\->")
-    ("←"  . "\\<-")
-    ("↓"  . "\\|v")
-    ("↑"  . "\\|^")
-    ("γ"  . "\\Gg")
-    ("δ"  . "\\Gd")
-    ("ε"  . "\\Ge")
-    ("η"  . "\\Gn")
-    ("θ"  . "\\Gh")
-    ("λ"  . "\\Gl")
-    ("ρ"  . "\\Gr")
-    ("σ"  . "\\Gs")
-    ("τ"  . "\\Gt")
-    ("ω"  . "\\Gw")
-    ("Δ"  . "\\GD")
-    ("Π"  . "\\PI")
-    ("Ω"  . "\\GW")
-    ("∞"  . "\\oo")
-    ("«"  . "\\<<")
-    ("°"  . "\\^o")
-    ("µ"  . "\\Gm")
-    ("»"  . "\\>>")
-    ("×"  . "\\.x")
-    ("Φ"  . "\\O/")
-    ("÷"  . "\\:-")
-    ))
+    
+    ;; --- Symboles mathématiques et lettres grecques (alias nommés) ---
+    ("∠"  . "\\<)")         ; Right angle      0x80
+    ("x̄"  . "\\x-")         ; x overbar        0x81
+    ("∇"  . "\\.V")         ; Nabla            0x82
+    ("√"  . "\\v/")         ; Racine carrée    0x83
+    ("∫"  . "\\.S")         ; Intégrale        0x84
+    ("Σ"  . "\\GS")         ; Somme            0x85
+    ("▶"  . "\\|>")         ; Triangle droit   0x86
+    ("π"  . "\\pi")         ; pi               0x87
+    ("∂"  . "\\.d")         ; Dérivée partielle 0x88
+    ("≤"  . "\\<=")         ; ≤                0x89
+    ("≥"  . "\\>=")         ; ≥                0x8A
+    ("≠"  . "\\=/")         ; ≠                0x8B
+    ("α"  . "\\Ga")         ; alpha            0x8C
+    ("→"  . "\\->")         ; →                0x8D
+    ("←"  . "\\<-")         ; ←                0x8E
+    ("↓"  . "\\|v")         ; ↓                0x8F
+    ("↑"  . "\\|^")         ; ↑                0x90
+    ("γ"  . "\\Gg")         ; gamma            0x91
+    ("δ"  . "\\Gd")         ; delta            0x92
+    ("ε"  . "\\Ge")         ; epsilon          0x93
+    ("η"  . "\\Gn")         ; eta              0x94
+    ("θ"  . "\\Gh")         ; theta            0x95
+    ("λ"  . "\\Gl")         ; lambda           0x96
+    ("ρ"  . "\\Gr")         ; rho              0x97
+    ("σ"  . "\\Gs")         ; sigma            0x98
+    ("τ"  . "\\Gt")         ; tau              0x99
+    ("ω"  . "\\Gw")         ; omega            0x9A
+    ("Δ"  . "\\GD")         ; Delta maj.       0x9B
+    ("Π"  . "\\PI")         ; Pi maj.          0x9C
+    ("Ω"  . "\\GW")         ; Omega maj.       0x9D
+    ("■"  . "\\[]")         ; Carré plein      0x9E
+    ("∞"  . "\\oo")         ; Infini           0x9F
 
+    ;; --- Symboles typographiques (alias nommés) ---
+    ("«"  . "\\<<")         ; «                0xAB
+    ("°"  . "\\^o")         ; Degré            0xB0
+    ("µ"  . "\\Gm")         ; Micro/mu         0xB5
+    ("»"  . "\\>>")         ; »                0xBB
+
+    ;; --- Opérateurs mathématiques (alias nommés) ---
+    ("×"  . "\\.x")         ; ×                0xD7
+    ("ß"  . "\\Gb")         ; sharp s          0xDF
+    ("÷"  . "\\:-")         ; ÷                0xF7
+
+    ;; --- Phi (conservé, absent du site) ---
+    ("Φ"  . "\\O/")
+
+    ;; --- Caractères à code numérique (0xA0–0xBF) ---
+    ;; (" "  . "\\160")        ; Espace insécable
+    ("¡"  . "\\161")        ; ! inversé
+    ("¢"  . "\\162")        ; Cent
+    ("£"  . "\\163")        ; Livre sterling
+    ("¤"  . "\\164")        ; Monnaie générique
+    ("¥"  . "\\165")        ; Yen
+    ("¦"  . "\\166")        ; Barre brisée
+    ("§"  . "\\167")        ; Paragraphe
+    ("¨"  . "\\168")        ; Tréma
+    ("©"  . "\\169")        ; Copyright
+    ("ª"  . "\\170")        ; Indicateur ordinal féminin
+    ("¬"  . "\\172")        ; Négation logique
+    ("®"  . "\\174")        ; Registered
+    ("¯"  . "\\175")        ; Macron
+    ("±"  . "\\177")        ; Plus ou moins
+    ("²"  . "\\178")        ; Exposant 2
+    ("³"  . "\\179")        ; Exposant 3
+    ("´"  . "\\180")        ; Accent aigu
+    ("¶"  . "\\182")        ; Pied-de-mouche
+    ("·"  . "\\183")        ; Point médian
+    ("¸"  . "\\184")        ; Cédille
+    ("¹"  . "\\185")        ; Exposant 1
+    ("º"  . "\\186")        ; Indicateur ordinal masculin
+    ("¼"  . "\\188")        ; 1/4
+    ("½"  . "\\189")        ; 1/2
+    ("¾"  . "\\190")        ; 3/4
+    ("¿"  . "\\191")        ; ? inversé
+
+    ;; --- Capitales latines étendues (0xC0–0xD6) ---
+    ("À"  . "\\192")
+    ("Á"  . "\\193")
+    ("Â"  . "\\194")
+    ("Ã"  . "\\195")
+    ("Ä"  . "\\196")
+    ("Å"  . "\\197")
+    ("Æ"  . "\\198")
+    ("Ç"  . "\\199")
+    ("È"  . "\\200")
+    ("É"  . "\\201")
+    ("Ê"  . "\\202")
+    ("Ë"  . "\\203")
+    ("Ì"  . "\\204")
+    ("Í"  . "\\205")
+    ("Î"  . "\\206")
+    ("Ï"  . "\\207")
+    ("Ð"  . "\\208")
+    ("Ñ"  . "\\209")
+    ("Ò"  . "\\210")
+    ("Ó"  . "\\211")
+    ("Ô"  . "\\212")
+    ("Õ"  . "\\213")
+    ("Ö"  . "\\214")
+    ("×"  . "\\215") ;; × déjà présent avec \\.x
+    ("Ø"  . "\\216")
+    ("Ù"  . "\\217")
+    ("Ú"  . "\\218")
+    ("Û"  . "\\219")
+    ("Ü"  . "\\220")
+    ("Ý"  . "\\221")
+    ("Þ"  . "\\222")
+    ;; ß déjà présent avec \\Gb
+
+    ;; --- Minuscules latines étendues (0xE0–0xFF) ---
+    ("à"  . "\\224")
+    ("á"  . "\\225")
+    ("â"  . "\\226")
+    ("ã"  . "\\227")
+    ("ä"  . "\\228")
+    ("å"  . "\\229")
+    ("æ"  . "\\230")
+    ("ç"  . "\\231")
+    ("è"  . "\\232")
+    ("é"  . "\\233")
+    ("ê"  . "\\234")
+    ("ë"  . "\\235")
+    ("ì"  . "\\236")
+    ("í"  . "\\237")
+    ("î"  . "\\238")
+    ("ï"  . "\\239")
+    ("ð"  . "\\240")
+    ("ñ"  . "\\241")
+    ("ò"  . "\\242")
+    ("ó"  . "\\243")
+    ("ô"  . "\\244")
+    ("õ"  . "\\245")
+    ("ö"  . "\\246")
+    ;; ÷ déjà présent avec \\:-
+    ("ø"  . "\\248")
+    ("ù"  . "\\249")
+    ("ú"  . "\\250")
+    ("û"  . "\\251")
+    ("ü"  . "\\252")
+    ("ý"  . "\\253")
+    ("þ"  . "\\254")
+    ("ÿ"  . "\\255")
+    ))
 (defun hp48-ascii-to-unicode ()
   (interactive)
   (let ((case-fold-search nil))
@@ -271,10 +440,14 @@
       (progn
         (hp48-unicode-to-ascii)
         (setq hp48--unicode-mode nil)
+        (display-fill-column-indicator-mode -1)
+        (font-lock-flush)
         (message "Mode ASCII (trigraphes)"))
     (progn
       (hp48-ascii-to-unicode)
       (setq hp48--unicode-mode t)
+      (display-fill-column-indicator-mode 1)
+      (font-lock-flush)
       (message "Mode Unicode"))))
 
 ;; gestion x48
@@ -341,7 +514,7 @@ The %s placeholder will be replaced with the device path."
 	 (nfn (file-name-base bfn))
 	 (nf (concat "/tmp/" nfn)))
     (hp48-kermit-conf port)
-    (copy-file bfn nf)
+    (copy-file bfn nf t)
     (unwind-protect
 	(shell-command
 	 (format hp48--send-command hp48-kermit-configfile nf)
@@ -396,11 +569,10 @@ La version imprimée est dans un buffer temporaire avec :
              (margin-mm 10)
              (height-mm (round (+ (* lines line-height-mm) margin-mm)))
              (page-size (format "Custom.%dx%dmm" hp48-label-width-mm height-mm)))
-        (setq lpr-switches
-              (list "-P" hp48-printer-name
-                    "-o" "print-quality=5"
-                    "-o" (concat "PageSize=" page-size)))
-        (lpr-buffer)
+        (let ((lpr-switches (list "-P" hp48-printer-name
+				 "-o" "print-quality=5"
+				 "-o" (concat "PageSize=" page-size))))
+          (lpr-buffer))
 	(message "Impression sur %s de %d lignes. En cas de souci, changez la valeur de hp48-label-line-height-mm"
 		 hp48-printer-name lines)))))
 
@@ -428,7 +600,9 @@ La version imprimée est dans un buffer temporaire avec :
   (setq-local indent-line-function #'hp48-indent-line)
   ;; Indicateur visuel à 23 colonnes
   (setq-local fill-column 23)
-  (display-fill-column-indicator-mode 1)
+  ;; L'indicateur de colonne n'est actif qu'en mode unicode (ligne droite pertinente).
+  ;; En mode ASCII, le matcher font-lock hp48--overflow-matcher gère
+  ;; la limite par ligne en tenant compte des trigraphes.
   (add-hook 'completion-at-point-functions #'hp48-completion-at-point nil t)
   (add-hook 'hp48-mode-hook #'indent-bars-mode)
   (add-hook 'hp48-mode-hook
